@@ -21,7 +21,7 @@ python eval_new_new.py \
   --devices 8 \
   --precision 16 \
   --model.resize_type pi \
-  --model.weights vvit_base_patch16_224 \
+  --model.weights vit_base_patch16_224 \
   --data.root /mnt/mmtech01/dataset/lzy/ILSVRC2012/val \
   --data.num_classes 1000 \
   --model.patch_size 16 \
