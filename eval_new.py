@@ -13,16 +13,16 @@ from flexivit_pytorch.utils import resize_abs_pos_embed
 from data_utils.imagenet_val import DataModule
 
 
-
 class ClassificationEvaluator(pl.LightningModule):
     def __init__(
-        self,
-        weights: str,
-        num_classes: int,
-        image_size: int = 224,
-        patch_size: int = 16,
-        resize_type: str = "pi",
-        results_path: Optional[str] = None,
+            self,
+            weights: str,
+            num_classes: int,
+            image_size: int = 224,
+            patch_size: int = 16,
+            resize_type: str = "pi",
+            ckpt_path: str = None,
+            results_path: Optional[str] = None,
     ):
         """Classification Evaluator
 
@@ -42,11 +42,17 @@ class ClassificationEvaluator(pl.LightningModule):
         self.patch_size = patch_size
         self.resize_type = resize_type
         self.results_path = results_path
+        self.ckpt_path = ckpt_path
 
         # Load original weights
         print(f"Loading weights {self.weights}")
-        orig_net = create_model(self.weights, pretrained=True)
-        state_dict = orig_net.state_dict()
+        if self.ckpt_path is not None:
+            orig_net = create_model(self.weights, pretrained=False,
+                                    checkpoint_path=self.ckpt_path)
+            state_dict = orig_net.state_dict()
+        else:
+            orig_net = create_model(self.weights, pretrained=True)
+            state_dict = orig_net.state_dict()
 
         # Adjust patch embedding
         if self.resize_type == "pi":
@@ -142,6 +148,9 @@ if __name__ == "__main__":
     # args["model"]["n_classes"] = dm.num_classes
     # args["model"]["image_size"] = dm.size
     model = ClassificationEvaluator(**args["model"])
-    trainer = pl.Trainer.from_argparse_args(args)
+    from pytorch_lightning.loggers import WandbLogger
+
+    wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
+    trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
 
     trainer.test(model, datamodule=dm)
