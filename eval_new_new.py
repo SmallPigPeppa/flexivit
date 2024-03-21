@@ -111,9 +111,13 @@ class ClassificationEvaluator(pl.LightningModule):
         # Get accuracy
         acc = self.acc(pred, y)
 
+        preds = torch.argmax(pred, dim=1)
+        acc2 = torch.sum(preds == y) / y.shape[0]
+
         # Log
         self.log(f"test_loss", loss)
         self.log(f"test_acc", acc)
+        self.log(f"test_acc2", acc2)
 
         return {"test_acc": acc}
 
