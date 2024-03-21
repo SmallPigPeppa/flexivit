@@ -67,16 +67,16 @@ class DataModule(pl.LightningDataModule):
             mean=self.mean,
             std=self.std,
         )
-
+        from torchvision.transforms import InterpolationMode
         self.transform = transforms.Compose([
-            transforms.Resize(256, interpolation='bicubic'),
+            transforms.Resize(256, interpolation=InterpolationMode.BICUBIC),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
 
     def setup(self, stage="test"):
-        self.test_dataset = ImageFolder(root=self.root, transform=self.transform)
+        self.test_dataset = ImageFolder(root=self.root, transform=self.transforms)
         print(f"Using dataset from {self.root}")
 
     def test_dataloader(self):
