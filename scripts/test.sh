@@ -1,4 +1,4 @@
-python eval_new.py \
+python eval_new_new.py \
   --accelerator gpu \
   --devices 8 \
   --precision 16 \

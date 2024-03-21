@@ -49,6 +49,7 @@ class ClassificationEvaluator(pl.LightningModule):
         if self.ckpt_path is not None:
             self.net = create_model(self.weights, pretrained=False,
                                     checkpoint_path=self.ckpt_path)
+            self.net = create_model(self.weights, pretrained=False)
             state_dict = self.net.state_dict()
         else:
             orig_net = create_model(self.weights, pretrained=True)
