@@ -165,4 +165,4 @@ if __name__ == "__main__":
     # trainer.fit(model, dm_dali)
     # trainer.test(model, datamodule=dm)
     model.eval()
-    trainer.validate(model, datamodule=dm)
+    trainer.test(model, datamodule=dm)
