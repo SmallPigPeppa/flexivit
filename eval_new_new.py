@@ -11,6 +11,7 @@ from flexivit_pytorch import (interpolate_resize_patch_embed,
                               pi_resize_patch_embed)
 from flexivit_pytorch.utils import resize_abs_pos_embed
 from data_utils.imagenet_val import DataModule
+import torchmetrics
 import torch
 
 
@@ -91,7 +92,8 @@ class ClassificationEvaluator(pl.LightningModule):
         # self.net.load_state_dict(state_dict, strict=True)
 
         # Define metrics
-        self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
+        # self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
+        self.acc = torchmetrics.Accuracy()
 
         # Define loss
         self.loss_fn = CrossEntropyLoss()
