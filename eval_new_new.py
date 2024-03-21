@@ -23,6 +23,9 @@ class ClassificationEvaluator(pl.LightningModule):
             resize_type: str = "pi",
             ckpt_path: str = None,
             results_path: Optional[str] = None,
+            max_epochs: int = 20,
+            lr: int = 0.1,
+            wd: int = 5e-4,
     ):
         """Classification Evaluator
 
@@ -43,6 +46,9 @@ class ClassificationEvaluator(pl.LightningModule):
         self.resize_type = resize_type
         self.results_path = results_path
         self.ckpt_path = ckpt_path
+        self.max_epochs = max_epochs
+        self.lr = lr
+        self.wd = wd
 
         # Load original weights
         print(f"Loading weights {self.weights}")
@@ -74,17 +80,20 @@ class ClassificationEvaluator(pl.LightningModule):
     #     return optimizer
 
     def configure_optimizers(self):
+        # self.lr=0.1
+        # self.wd=5e-4
+
         optimizer = torch.optim.SGD(
             self.net.head.parameters(),
-            lr=0.1,
-            weight_decay=5e-4,
+            lr=self.lr,
+            weight_decay=self.wd,
             momentum=0.9)
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
             warmup_epochs=5,
-            max_epochs=self.args.max_epochs,
-            warmup_start_lr=0.01 * self.args.learning_rate,
-            eta_min=0.01 * self.args.learning_rate,
+            max_epochs=self.max_epochs,
+            warmup_start_lr=0.01 * self.learning_rate,
+            eta_min=0.01 * self.learning_rate,
         )
         return [optimizer], [scheduler]
 
@@ -159,6 +168,7 @@ if __name__ == "__main__":
     parser.add_lightning_class_args(ClassificationEvaluator, "model")
     parser.link_arguments("data.num_classes", "model.num_classes")
     parser.link_arguments("data.size", "model.image_size")
+    parser.link_arguments("max_epochs", "model.max_epochs")
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
