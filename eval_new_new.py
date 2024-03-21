@@ -109,7 +109,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.log(f"test_loss", loss)
         self.log(f"test_acc", acc)
 
-        return loss
+        return {"test_acc": acc}
 
     def test_epoch_end(self, _):
         if self.results_path:
