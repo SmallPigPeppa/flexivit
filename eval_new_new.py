@@ -52,28 +52,28 @@ class ClassificationEvaluator(pl.LightningModule):
             self.net = create_model(self.weights, pretrained=False,
                                     checkpoint_path=self.ckpt_path)
             self.net = create_model(self.weights, pretrained=False)
-            model_path = './vit_base_patch16_224.augreg_in21k_ft_in1k.pth'
+            model_path = self.ckpt_path
             self.net.load_state_dict(torch.load(model_path))
-            state_dict = self.net.state_dict()
+            # state_dict = self.net.state_dict()
         else:
             orig_net = create_model(self.weights, pretrained=True)
-            state_dict = orig_net.state_dict()
+            # state_dict = orig_net.state_dict()
 
-        # Adjust patch embedding
-        if self.resize_type == "pi":
-            state_dict["patch_embed.proj.weight"] = pi_resize_patch_embed(
-                state_dict["patch_embed.proj.weight"],
-                (self.patch_size, self.patch_size),
-            )
-        elif self.resize_type == "interpolate":
-            state_dict["patch_embed.proj.weight"] = interpolate_resize_patch_embed(
-                state_dict["patch_embed.proj.weight"],
-                (self.patch_size, self.patch_size),
-            )
-        else:
-            raise ValueError(
-                f"{self.resize_type} is not a valid value for --model.resize_type. Should be one of ['flexi', 'interpolate']"
-            )
+        # # Adjust patch embedding
+        # if self.resize_type == "pi":
+        #     state_dict["patch_embed.proj.weight"] = pi_resize_patch_embed(
+        #         state_dict["patch_embed.proj.weight"],
+        #         (self.patch_size, self.patch_size),
+        #     )
+        # elif self.resize_type == "interpolate":
+        #     state_dict["patch_embed.proj.weight"] = interpolate_resize_patch_embed(
+        #         state_dict["patch_embed.proj.weight"],
+        #         (self.patch_size, self.patch_size),
+        #     )
+        # else:
+        #     raise ValueError(
+        #         f"{self.resize_type} is not a valid value for --model.resize_type. Should be one of ['flexi', 'interpolate']"
+        #     )
 
         # # Adjust position embedding
         # if "pos_embed" in state_dict.keys():
