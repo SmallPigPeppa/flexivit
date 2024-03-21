@@ -93,7 +93,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Define metrics
         # self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
-        self.acc = torchmetrics.Accuracy()
+        self.acc = torchmetrics.Accuracy(task="multiclass")
 
         # Define loss
         self.loss_fn = CrossEntropyLoss()
