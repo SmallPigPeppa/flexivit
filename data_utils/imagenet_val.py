@@ -8,20 +8,19 @@ from torchvision.datasets import ImageFolder
 from torchvision import transforms, datasets
 
 
-
 class DataModule(pl.LightningDataModule):
     def __init__(
-        self,
-        is_lmdb: bool = False,
-        root: str = "data/",
-        num_classes: int = 1000,
-        size: int = 224,
-        crop_pct: float = 1.0,
-        interpolation: str = "bicubic",
-        mean: Union[Sequence[float], str] = (0.485, 0.456, 0.406),
-        std: Union[Sequence[float], str] = (0.229, 0.224, 0.225),
-        batch_size: int = 256,
-        workers: int = 4,
+            self,
+            is_lmdb: bool = False,
+            root: str = "data/",
+            num_classes: int = 1000,
+            size: int = 224,
+            crop_pct: float = 1.0,
+            interpolation: str = "bicubic",
+            mean: Union[Sequence[float], str] = (0.485, 0.456, 0.406),
+            std: Union[Sequence[float], str] = (0.229, 0.224, 0.225),
+            batch_size: int = 256,
+            workers: int = 4,
     ):
         """Classification Evaluation Datamodule
 
@@ -61,7 +60,6 @@ class DataModule(pl.LightningDataModule):
         else:
             self.std = std
 
-
         self.transforms = transforms_imagenet_eval(
             img_size=self.size,
             crop_pct=self.crop_pct,
@@ -71,7 +69,7 @@ class DataModule(pl.LightningDataModule):
         )
 
         self.transform = transforms.Compose([
-            transforms.Resize(256),
+            transforms.Resize(256, interpolation='bicubic'),
             transforms.CenterCrop(224),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -89,5 +87,3 @@ class DataModule(pl.LightningDataModule):
             num_workers=self.workers,
             pin_memory=True,
         )
-
-
