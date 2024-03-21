@@ -5,6 +5,7 @@ from timm.data import (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD,
 from timm.data.transforms_factory import transforms_imagenet_eval
 from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
+from torchvision import transforms, datasets
 
 
 
@@ -69,8 +70,15 @@ class DataModule(pl.LightningDataModule):
             std=self.std,
         )
 
+        self.transform = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
     def setup(self, stage="test"):
-        self.test_dataset = ImageFolder(root=self.root, transform=self.transforms)
+        self.test_dataset = ImageFolder(root=self.root, transform=self.transform)
         print(f"Using dataset from {self.root}")
 
     def test_dataloader(self):
