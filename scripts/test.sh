@@ -6,7 +6,7 @@ python eval_new.py \
   --model.weights vit_base_patch16_224.augreg_in21k_ft_in1k \
   --data.root /mnt/mmtech01/dataset/lzy/ILSVRC2012/val \
   --data.num_classes 1000 \
-  --model.patch_size 20 \
+  --model.patch_size 16 \
   --model.ckpt_path ./vit_base_patch16_224.augreg_in21k_ft_in1k.pth \
   --data.size 224 \
   --data.crop_pct 0.9 \
