@@ -11,6 +11,7 @@ from flexivit_pytorch import (interpolate_resize_patch_embed,
                               pi_resize_patch_embed)
 from flexivit_pytorch.utils import resize_abs_pos_embed
 from data_utils.imagenet_val import DataModule
+import torch
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -50,6 +51,8 @@ class ClassificationEvaluator(pl.LightningModule):
             self.net = create_model(self.weights, pretrained=False,
                                     checkpoint_path=self.ckpt_path)
             self.net = create_model(self.weights, pretrained=False)
+            model_path = './vit_base_patch16_224.augreg_in21k_ft_in1k.pth'
+            model.load_state_dict(torch.load(model_path))
             state_dict = self.net.state_dict()
         else:
             orig_net = create_model(self.weights, pretrained=True)
