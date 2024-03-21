@@ -4,7 +4,7 @@ python eval_new_new.py \
   --precision 16 \
   --model.resize_type pi \
   --model.weights vit_base_patch16_224.augreg_in21k_ft_in1k \
-  --data.root /mnt/mmtech01/dataset/lzy/ILSVRC2012/val \
+  --data.root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --data.num_classes 1000 \
   --model.patch_size 16 \
   --model.ckpt_path ./vit_base_patch16_224.augreg_in21k_ft_in1k.pth \
