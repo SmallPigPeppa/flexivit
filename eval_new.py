@@ -47,7 +47,7 @@ class ClassificationEvaluator(pl.LightningModule):
         # Load original weights
         print(f"Loading weights {self.weights}")
         if self.ckpt_path is not None:
-            orig_net = create_model(self.weights, pretrained=False,
+            orig_net = create_model(self.weights, pretrained=True,
                                     checkpoint_path=self.ckpt_path)
             state_dict = orig_net.state_dict()
         else:
