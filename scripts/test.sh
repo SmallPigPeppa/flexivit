@@ -9,6 +9,4 @@ python eval.py \
   --model.patch_size 20 \
   --data.size 224 \
   --data.crop_pct 0.9 \
-  --data.mean "[0.5,0.5,0.5]" \
-  --data.std "[0.5,0.5,0.5]" \
   --data.batch_size 256 \

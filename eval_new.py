@@ -1,24 +1,12 @@
 import os
-from functools import partial
 from typing import Callable, Optional, Sequence, Union
-
-import lmdb
 import pandas as pd
-import pyarrow as pa
 import pytorch_lightning as pl
-import six
 import timm.models
-from PIL import Image
 from pytorch_lightning.cli import LightningArgumentParser
 from timm import create_model
-from timm.data import (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD,
-                       OPENAI_CLIP_MEAN, OPENAI_CLIP_STD)
-from timm.data.transforms_factory import transforms_imagenet_eval
 from torch.nn import CrossEntropyLoss
-from torch.utils.data import DataLoader, Dataset
 from torchmetrics.classification.accuracy import Accuracy
-from torchvision.datasets import ImageFolder
-
 from flexivit_pytorch import (interpolate_resize_patch_embed,
                               pi_resize_patch_embed)
 from flexivit_pytorch.utils import resize_abs_pos_embed
