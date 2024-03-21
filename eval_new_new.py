@@ -25,7 +25,7 @@ class ClassificationEvaluator(pl.LightningModule):
             results_path: Optional[str] = None,
             max_epochs: int = 20,
             lr: float = 0.1,
-            wd: int = 5e-4,
+            wd: float = 5e-4,
     ):
         """Classification Evaluator
 
