@@ -152,7 +152,7 @@ if __name__ == "__main__":
     dm_dali = ClassificationDALIDataModule(
         train_data_path=os.path.join(args["data"].root, 'train'),
         val_data_path=os.path.join(args["data"].root, 'val'),
-        num_workers=args["data"].num_workers,
+        num_workers=args["data"].workers,
         batch_size=args["data"].batch_size)
     # args["model"]["n_classes"] = dm.num_classes
     # args["model"]["image_size"] = dm.size
