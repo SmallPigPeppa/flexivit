@@ -109,6 +109,14 @@ class DataModule(pl.LightningDataModule):
             num_workers=self.workers,
             pin_memory=True,
         )
+    def val_dataloader(self):
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.workers,
+            pin_memory=True,
+        )
 
 
 class ImageFolderLMDB(Dataset):

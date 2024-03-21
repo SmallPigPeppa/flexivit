@@ -162,5 +162,7 @@ if __name__ == "__main__":
     wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
 
-    trainer.fit(model, dm_dali)
-    trainer.test(model, datamodule=dm)
+    # trainer.fit(model, dm_dali)
+    # trainer.test(model, datamodule=dm)
+    model.eval()
+    trainer.validate(model, datamodule=dm)
