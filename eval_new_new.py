@@ -9,6 +9,7 @@ from torch.nn import CrossEntropyLoss
 from torchmetrics.classification.accuracy import Accuracy
 from data_utils.imagenet_val import DataModule
 import torch
+import torch.optim as optim
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -58,6 +59,37 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Define loss
         self.loss_fn = CrossEntropyLoss()
+
+
+        # 冻结除FC层之外的所有层
+        for param in self.net.parameters():
+            param.requires_grad = False
+        # 假设全连接层的名称是 'head'，这在不同的模型中可能有所不同
+        for param in self.net.head.parameters():
+            param.requires_grad = True
+
+    def configure_optimizers(self):
+        # 只优化全连接层的参数
+        optimizer = optim.Adam(self.net.head.parameters(), lr=1e-3)
+        return optimizer
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        logits = self(x)
+        loss = self.loss_fn(logits, y)
+        acc = self.acc(logits, y)
+        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log('train_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        logits = self(x)
+        loss = self.loss_fn(logits, y)
+        acc = self.acc(logits, y)
+        self.log('val_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log('val_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        return {'val_loss': loss, 'val_acc': acc}
 
     def forward(self, x):
         return self.net(x)
@@ -116,6 +148,12 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
 
     dm = DataModule(**args["data"])
+    from data_utils.imagenet_dali import ClassificationDALIDataModule
+    dm_dali = ClassificationDALIDataModule(
+        train_data_path=os.path.join(args["data"].root, 'train'),
+        val_data_path=os.path.join(args["data"].root, 'val'),
+        num_workers=args["data"].num_workers,
+        batch_size=args["data"].batch_size)
     # args["model"]["n_classes"] = dm.num_classes
     # args["model"]["image_size"] = dm.size
     model = ClassificationEvaluator(**args["model"])
@@ -124,4 +162,5 @@ if __name__ == "__main__":
     wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
 
+    trainer.fit(model, dm_dali)
     trainer.test(model, datamodule=dm)

@@ -6,7 +6,7 @@ from timm.data.transforms_factory import transforms_imagenet_eval
 from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
 from torchvision import transforms, datasets
-
+import os
 
 class DataModule(pl.LightningDataModule):
     def __init__(
@@ -76,7 +76,7 @@ class DataModule(pl.LightningDataModule):
         ])
 
     def setup(self, stage="test"):
-        self.test_dataset = ImageFolder(root=self.root, transform=self.transform)
+        self.test_dataset = ImageFolder(root=os.path.join(self.root, 'val'), transform=self.transform)
         print(f"Using dataset from {self.root}")
 
     def test_dataloader(self):
