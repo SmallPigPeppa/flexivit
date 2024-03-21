@@ -7,11 +7,7 @@ from pytorch_lightning.cli import LightningArgumentParser
 from timm import create_model
 from torch.nn import CrossEntropyLoss
 from torchmetrics.classification.accuracy import Accuracy
-from flexivit_pytorch import (interpolate_resize_patch_embed,
-                              pi_resize_patch_embed)
-from flexivit_pytorch.utils import resize_abs_pos_embed
 from data_utils.imagenet_val import DataModule
-import torchmetrics
 import torch
 
 
@@ -49,51 +45,16 @@ class ClassificationEvaluator(pl.LightningModule):
         # Load original weights
         print(f"Loading weights {self.weights}")
         if self.ckpt_path is not None:
-            self.net = create_model(self.weights, pretrained=False,
-                                    checkpoint_path=self.ckpt_path)
-            self.net = create_model(self.weights, pretrained=False)
-            model_path = self.ckpt_path
-            self.net.load_state_dict(torch.load(model_path))
-            # state_dict = self.net.state_dict()
+            self.net = create_model(self.weights, pretrained=True)
+            # self.net = create_model(self.weights, pretrained=False,
+            #                         checkpoint_path=self.ckpt_path)
+            # self.net = create_model(self.weights, pretrained=False)
+            # model_path = self.ckpt_path
+            # self.net.load_state_dict(torch.load(model_path))
         else:
             orig_net = create_model(self.weights, pretrained=True)
-            # state_dict = orig_net.state_dict()
 
-        # # Adjust patch embedding
-        # if self.resize_type == "pi":
-        #     state_dict["patch_embed.proj.weight"] = pi_resize_patch_embed(
-        #         state_dict["patch_embed.proj.weight"],
-        #         (self.patch_size, self.patch_size),
-        #     )
-        # elif self.resize_type == "interpolate":
-        #     state_dict["patch_embed.proj.weight"] = interpolate_resize_patch_embed(
-        #         state_dict["patch_embed.proj.weight"],
-        #         (self.patch_size, self.patch_size),
-        #     )
-        # else:
-        #     raise ValueError(
-        #         f"{self.resize_type} is not a valid value for --model.resize_type. Should be one of ['flexi', 'interpolate']"
-        #     )
-
-        # # Adjust position embedding
-        # if "pos_embed" in state_dict.keys():
-        #     grid_size = self.image_size // self.patch_size
-        #     state_dict["pos_embed"] = resize_abs_pos_embed(
-        #         state_dict["pos_embed"], new_size=(grid_size, grid_size)
-        #     )
-
-        # Load adjusted weights into model with target patch and image sizes
-        # model_fn = getattr(timm.models, orig_net.default_cfg["architecture"])
-        # self.net = model_fn(
-        #     img_size=self.image_size,
-        #     patch_size=self.patch_size,
-        #     num_classes=self.num_classes,
-        # )
-        # self.net.load_state_dict(state_dict, strict=True)
-
-        # Define metrics
         self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
-        # self.acc = torchmetrics.Accuracy(task="multiclass")
 
         # Define loss
         self.loss_fn = CrossEntropyLoss()
