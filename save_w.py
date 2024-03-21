@@ -1,8 +1,8 @@
 import torch
 from timm import create_model
 
-# model_name = 'vit_base_patch16_224'
-model_name = 'vit_base_patch16_224.augreg_in21k_ft_in1k'
+model_name = 'vit_base_patch16_224'
+# model_name = 'vit_base_patch16_224.augreg_in21k_ft_in1k'
 if __name__ == '__main__':
     net = create_model(model_name, pretrained=True)
     # state_dict = create_model(model_name, pretrained=True).state_dict()
