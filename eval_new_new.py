@@ -92,8 +92,8 @@ class ClassificationEvaluator(pl.LightningModule):
             optimizer,
             warmup_epochs=5,
             max_epochs=self.max_epochs,
-            warmup_start_lr=0.01 * self.learning_rate,
-            eta_min=0.01 * self.learning_rate,
+            warmup_start_lr=0.01 * self.lr,
+            eta_min=0.01 * self.lr,
         )
         return [optimizer], [scheduler]
 
