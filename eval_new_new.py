@@ -10,6 +10,7 @@ from torchmetrics.classification.accuracy import Accuracy
 from data_utils.imagenet_val import DataModule
 import torch
 import torch.optim as optim
+from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -60,7 +61,6 @@ class ClassificationEvaluator(pl.LightningModule):
         # Define loss
         self.loss_fn = CrossEntropyLoss()
 
-
         # 冻结除FC层之外的所有层
         for param in self.net.parameters():
             param.requires_grad = False
@@ -68,10 +68,25 @@ class ClassificationEvaluator(pl.LightningModule):
         for param in self.net.head.parameters():
             param.requires_grad = True
 
+    # def configure_optimizers(self):
+    #     # 只优化全连接层的参数
+    #     optimizer = optim.Adam(self.net.head.parameters(), lr=1e-3)
+    #     return optimizer
+
     def configure_optimizers(self):
-        # 只优化全连接层的参数
-        optimizer = optim.Adam(self.net.head.parameters(), lr=1e-3)
-        return optimizer
+        optimizer = torch.optim.SGD(
+            self.net.head.parameters(),
+            lr=0.1,
+            weight_decay=5e-4,
+            momentum=0.9)
+        scheduler = LinearWarmupCosineAnnealingLR(
+            optimizer,
+            warmup_epochs=5,
+            max_epochs=self.args.max_epochs,
+            warmup_start_lr=0.01 * self.args.learning_rate,
+            eta_min=0.01 * self.args.learning_rate,
+        )
+        return [optimizer], [scheduler]
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -149,6 +164,7 @@ if __name__ == "__main__":
 
     dm = DataModule(**args["data"])
     from data_utils.imagenet_dali import ClassificationDALIDataModule
+
     dm_dali = ClassificationDALIDataModule(
         train_data_path=os.path.join(args["data"].root, 'train'),
         val_data_path=os.path.join(args["data"].root, 'val'),
