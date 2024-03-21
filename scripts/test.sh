@@ -1,5 +1,5 @@
 python eval_new_new.py \
-  --max_epochs 10 \
+  --max_epochs 20 \
   --accelerator gpu \
   --devices 8 \
   --precision 16 \
