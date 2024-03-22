@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 from typing import Callable, List, Optional, Union
 
-import lightning.pytorch as pl
+import pytorch_lightning as pl
 import nvidia.dali.fn as fn
 import nvidia.dali.ops as ops
 import nvidia.dali.types as types
