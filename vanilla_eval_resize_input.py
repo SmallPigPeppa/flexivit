@@ -8,12 +8,6 @@ from timm import create_model
 from torch.nn import CrossEntropyLoss
 from torchmetrics.classification.accuracy import Accuracy
 from data_utils.imagenet_val import DataModule
-import torch
-import torch.optim as optim
-from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
-import torchvision
-from pytorch_lightning.loggers import WandbLogger
-from data_utils.timm import prepare_data
 import torch.nn.functional as F
 from flexivit_pytorch import (interpolate_resize_patch_embed, pi_resize_patch_embed)
 from flexivit_pytorch.utils import resize_abs_pos_embed
