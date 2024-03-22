@@ -1,4 +1,4 @@
-python eval_new_new.py \
+python eval_debug.py \
   --max_epochs 1 \
   --accelerator gpu \
   --devices 8 \
