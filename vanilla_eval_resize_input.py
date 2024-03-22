@@ -127,28 +127,6 @@ class ClassificationEvaluator(pl.LightningModule):
                 header=not os.path.exists(self.results_path),
             )
 
-    # def test_epoch_end(self, _):
-    #     # if self.results_path and self.trainer.is_global_zero:  # 检查是否为主进程
-    #     acc = self.acc.compute().detach().cpu().item()
-    #     new_data = {
-    #         f"acc_{self.patch_size}_{self.image_size}_{self.resize_type}": [round(acc, 4)]
-    #     }
-    #
-    #     if os.path.exists(self.results_path):
-    #         # 如果结果文件已存在，读取并更新
-    #         existing_data = pd.read_csv(self.results_path, index_col=0)
-    #         for key, value in new_data.items():
-    #             existing_data[key] = value  # 添加或更新列
-    #         results = existing_data
-    #     else:
-    #         # 如果结果文件不存在，创建新的DataFrame
-    #         new_data["model"] = [self.weights]
-    #         results = pd.DataFrame(new_data)
-    #         # 确保目录存在
-    #         os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
-    #
-    #     # 保存结果
-    #     results.to_csv(self.results_path)
 
     def test_epoch_end(self, outputs):
         if self.results_path:
@@ -156,29 +134,22 @@ class ClassificationEvaluator(pl.LightningModule):
 
             # 让所有进程都执行到这里，但只有主进程进行写入操作
             if self.trainer.is_global_zero:
-                new_data = {
-                    f"acc_{self.patch_size}_{self.image_size}_{self.resize_type}": [round(acc, 4)]
-                }
+                column_name = f"{self.image_size}_{self.patch_size}"
+                # new_acc_value = round(acc, 4)
 
                 if os.path.exists(self.results_path):
-                    # 如果结果文件已存在，读取并更新
-                    existing_data = pd.read_csv(self.results_path, index_col=0)
-                    for key, value in new_data.items():
-                        existing_data[key] = value  # 添加或更新列
-                    results = existing_data
+                    # 结果文件已存在，读取现有数据
+                    results_df = pd.read_csv(self.results_path, index_col=0)
+                    # 检查列是否存在，若不存在则添加
+                    results_df[column_name] = acc
                 else:
-                    # 如果结果文件不存在，创建新的DataFrame
-                    new_data["model"] = [self.weights]
-                    results = pd.DataFrame(new_data)
+                    # 结果文件不存在，创建新的DataFrame
+                    results_df = pd.DataFrame({column_name: [acc]})
                     # 确保目录存在
                     os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
 
-                # 保存结果
-                results.to_csv(self.results_path)
-
-        # 确保所有进程都等待主进程写入完成
-        # 这里不需要额外的代码，因为is_global_zero的检查不会阻塞其他进程
-        # 只是确保了主进程执行了写入
+                # 保存更新后的结果
+                results_df.to_csv(self.results_path)
 
 
 if __name__ == "__main__":
