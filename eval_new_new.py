@@ -192,6 +192,7 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
 
     # trainer.fit(model, dm_dali)
-    trainer.test(model, datamodule=dm)
+    # trainer.test(model, datamodule=dm)
+    trainer.test(model, datamodule=dm_dali)
     # model.eval()
     # trainer.test(model, datamodule=dm)
