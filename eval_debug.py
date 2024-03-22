@@ -198,14 +198,11 @@ if __name__ == "__main__":
         dali_device='cpu'
     )
 
-
     dm1.trainer = trainer
     dm2.trainer = trainer
     # 分别从两个DataModules加载第一个批次的数据
     dm1.setup()
     dm2.setup()
-
-
 
     dm1_loader = dm1.test_dataloader()
     dm2_loader = dm2.test_dataloader()
@@ -226,7 +223,6 @@ if __name__ == "__main__":
     print("Images1 dtype:", images1.dtype, "Labels1 dtype:", labels1.dtype)
     print("Images2 dtype:", images2.dtype, "Labels2 dtype:", labels2.dtype)
 
-
     # print(images1)
     # print(images2)
     #
@@ -234,15 +230,19 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_pdf import PdfPages
+
     image1 = images1[0].numpy().transpose((1, 2, 0))  # 转换为HWC格式用于显示
     image2 = images2[0].numpy().transpose((1, 2, 0))  # 转换为HWC格式用于显示
+
+    image3 = image1 - image2
 
     # 确保图像数据在[0, 1]范围内，这对于显示归一化后的图像很重要
     image1 = (image1 - image1.min()) / (image1.max() - image1.min())
     image2 = (image2 - image2.min()) / (image2.max() - image2.min())
+    image3 = (image3 - image3.min()) / (image3.max() - image3.min())
 
     with PdfPages('output_images.pdf') as pdf:
-        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
 
         axs[0].imshow(image1)
         axs[0].set_title('Image from DataModule 1')
@@ -252,7 +252,10 @@ if __name__ == "__main__":
         axs[1].set_title('Image from DataModule 2')
         axs[1].axis('off')
 
+        axs[2].imshow(image3)
+        axs[2].set_title('Image from DataModule 3')
+        axs[2].axis('off')
+
         plt.tight_layout()
         pdf.savefig(fig)  # 保存当前的Figure对象到PDF
         plt.close()
-
