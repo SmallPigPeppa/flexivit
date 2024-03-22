@@ -105,7 +105,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         return loss
 
-    def test_epoch_end(self, _):
+    def test_epoch_end_old(self, _):
         if self.results_path:
             acc = self.acc.compute().detach().cpu().item()
             results = pd.DataFrame(
@@ -126,6 +126,29 @@ class ClassificationEvaluator(pl.LightningModule):
                 mode="a",
                 header=not os.path.exists(self.results_path),
             )
+
+    def test_epoch_end(self, _):
+        if self.results_path and self.trainer.is_global_zero:  # 检查是否为主进程
+            acc = self.acc.compute().detach().cpu().item()
+            new_data = {
+                f"acc_{self.patch_size}_{self.image_size}_{self.resize_type}": [round(acc, 4)]
+            }
+
+            if os.path.exists(self.results_path):
+                # 如果结果文件已存在，读取并更新
+                existing_data = pd.read_csv(self.results_path, index_col=0)
+                for key, value in new_data.items():
+                    existing_data[key] = value  # 添加或更新列
+                results = existing_data
+            else:
+                # 如果结果文件不存在，创建新的DataFrame
+                new_data["model"] = [self.weights]
+                results = pd.DataFrame(new_data)
+                # 确保目录存在
+                os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
+
+            # 保存结果
+            results.to_csv(self.results_path)
 
 
 if __name__ == "__main__":
