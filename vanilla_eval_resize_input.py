@@ -141,7 +141,7 @@ if __name__ == "__main__":
     parser.add_lightning_class_args(ClassificationEvaluator, "model")
     parser.link_arguments("data.num_classes", "model.num_classes")
     parser.link_arguments("data.size", "model.image_size")
-    parser.link_arguments("max_epochs", "model.max_epochs")
+    # parser.link_arguments("max_epochs", "model.max_epochs")
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
