@@ -199,7 +199,30 @@ if __name__ == "__main__":
         train_data_path=os.path.join(args["data"].root, 'train'),
         val_data_path=os.path.join(args["data"].root, 'val'),
         num_workers=args["data"].workers,
-        batch_size=args["data"].batch_size)
+        batch_size=args["data"].batch_size
+    )
+
+    from data_utils.timm import prepare_data
+
+    train_loader, val_loader = prepare_data(
+        dataset='imagenet',
+        train_data_path=os.path.join(args["data"].root, 'train'),
+        val_data_path=os.path.join(args["data"].root, 'val'),
+        num_workers=args["data"].workers,
+        batch_size=args["data"].batch_size
+        )
+
+    # def prepare_data(
+    #         dataset: str,
+    #         train_data_path: Optional[Union[str, Path]] = None,
+    #         val_data_path: Optional[Union[str, Path]] = None,
+    #         data_format: Optional[str] = "image_folder",
+    #         batch_size: int = 64,
+    #         num_workers: int = 4,
+    #         download: bool = True,
+    #         data_fraction: float = -1.0,
+    #         auto_augment: bool = False,
+    # ) -> Tuple[DataLoader, DataLoader]:
 
     # class ClassificationDALIDataModule(pl.LightningDataModule):
     #     def __init__(
@@ -217,7 +240,8 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
 
     # trainer.fit(model, dm_dali)
-    trainer.test(model, datamodule=dm)
+    # trainer.test(model, datamodule=dm)
+    trainer.test(model, dataloaders=val_loader)
     # trainer.test(model, datamodule=dm_dali)
     # model.eval()
     # trainer.test(model, datamodule=dm)
