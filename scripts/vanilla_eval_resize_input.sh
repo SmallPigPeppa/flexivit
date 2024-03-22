@@ -1,4 +1,5 @@
 python vanilla_eval_resize_input.py \
+  --max_epochs 1 \
   --accelerator gpu \
   --devices 8 \
   --precision 16 \
