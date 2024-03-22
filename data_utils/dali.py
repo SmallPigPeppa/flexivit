@@ -958,3 +958,6 @@ class ClassificationDALIDataModule(pl.LightningDataModule):
 
     def val_dataloader(self) -> TempDALIGenericIterator:
         return self.val_loader
+
+    def test_dataloader(self) -> TempDALIGenericIterator:
+        return self.val_loader
