@@ -225,3 +225,9 @@ if __name__ == "__main__":
 
     print("Images1 dtype:", images1.dtype, "Labels1 dtype:", labels1.dtype)
     print("Images2 dtype:", images2.dtype, "Labels2 dtype:", labels2.dtype)
+
+
+    print(images1)
+    print(images2)
+
+    import pdb;pdb.set_trace()
