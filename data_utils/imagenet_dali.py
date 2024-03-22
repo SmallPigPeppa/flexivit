@@ -162,6 +162,34 @@ class ClassificationDALIDataModule(pl.LightningDataModule):
         )
         return val_loader
 
+    def test_dataloader(self) -> DALIGenericIterator:
+        val_pipeline_builder = self.pipeline_class(
+            self.val_data_path,
+            validation=True,
+            batch_size=self.batch_size,
+            device=self.dali_device,
+            device_id=self.device_id,
+            shard_id=self.shard_id,
+            num_shards=self.num_shards,
+            num_threads=self.num_workers,
+        )
+        val_pipeline = val_pipeline_builder.pipeline(
+            batch_size=val_pipeline_builder.batch_size,
+            num_threads=val_pipeline_builder.num_threads,
+            device_id=val_pipeline_builder.device_id,
+            seed=val_pipeline_builder.seed,
+        )
+        val_pipeline.build()
+
+        val_loader = Wrapper(
+            val_pipeline,
+            output_map=["x", "label"],
+            reader_name="Reader",
+            last_batch_policy=LastBatchPolicy.PARTIAL,
+            auto_reset=True,
+        )
+        return val_loader
+
 
 class NormalPipelineBuilder:
     def __init__(
