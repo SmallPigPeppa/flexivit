@@ -1,7 +1,7 @@
 python eval_debug.py \
   --max_epochs 1 \
   --accelerator gpu \
-  --devices 8 \
+  --devices 1 \
   --precision 16 \
   --model.resize_type pi \
   --model.weights vit_base_patch16_224.augreg_in21k_ft_in1k \
