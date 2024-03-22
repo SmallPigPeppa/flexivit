@@ -198,12 +198,14 @@ if __name__ == "__main__":
         dali_device='cpu'
     )
 
+
+    dm1.trainer = trainer
+    dm2.trainer = trainer
     # 分别从两个DataModules加载第一个批次的数据
     dm1.setup()
     dm2.setup()
 
-    dm1.trainer = trainer
-    dm2.trainer = trainer
+
 
     dm1_loader = dm1.test_dataloader()
     dm2_loader = dm2.test_dataloader()
