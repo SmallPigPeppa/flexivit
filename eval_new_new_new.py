@@ -57,7 +57,7 @@ class ClassificationEvaluator(pl.LightningModule):
             # self.net = create_model(self.weights, pretrained=True)
             # self.net = create_model(self.weights, pretrained=False,
             #                         checkpoint_path=self.ckpt_path)
-            self.net = create_model(self.weights, pretrained=False)
+            self.net = create_model(self.weights, pretrained=True)
             # model_path = self.ckpt_path
             # self.net.load_state_dict(torch.load(model_path))
             # ViT_B_16_Weights.DEFAULT
