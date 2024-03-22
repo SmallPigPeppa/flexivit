@@ -11,7 +11,7 @@ python eval_new_new.py \
   --model.ckpt_path ./vit_base_patch16_224.augreg_in21k_ft_in1k.pth \
   --data.size 224 \
   --data.crop_pct 0.9 \
-  --data.batch_size 256 \
+  --data.batch_size 32 \
   --model.results_path ./result.csv
 
 
