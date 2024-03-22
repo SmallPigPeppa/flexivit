@@ -185,7 +185,7 @@ if __name__ == "__main__":
     #     batch_size=args["data"].batch_size)
     #
     # model = ClassificationEvaluator(**args["model"])
-    # trainer = pl.Trainer.from_argparse_args(args)
+    trainer = pl.Trainer.from_argparse_args(args)
     # trainer.test(model, datamodule=dm)
     # trainer.test(model, datamodule=dm_dali)
 
@@ -201,6 +201,9 @@ if __name__ == "__main__":
     # 分别从两个DataModules加载第一个批次的数据
     dm1.setup()
     dm2.setup()
+
+    dm1.trainer = trainer
+    dm2.trainer = trainer
 
     dm1_loader = dm1.test_dataloader()
     dm2_loader = dm2.test_dataloader()
