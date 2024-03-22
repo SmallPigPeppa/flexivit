@@ -180,17 +180,37 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
 
     dm = DataModule(**args["data"])
-    from data_utils.imagenet_dali import ClassificationDALIDataModule
+    # from data_utils.imagenet_dali import ClassificationDALIDataModule
+    #
+    # dm_dali = ClassificationDALIDataModule(
+    #     train_data_path=os.path.join(args["data"].root, 'train'),
+    #     val_data_path=os.path.join(args["data"].root, 'val'),
+    #     num_workers=args["data"].workers,
+    #     batch_size=args["data"].batch_size)
+    # args["model"]["n_classes"] = dm.num_classes
+    # args["model"]["image_size"] = dm.size
+    model = ClassificationEvaluator(**args["model"])
+    from pytorch_lightning.loggers import WandbLogger
+
+    from data_utils.dali import ClassificationDALIDataModule
 
     dm_dali = ClassificationDALIDataModule(
         train_data_path=os.path.join(args["data"].root, 'train'),
         val_data_path=os.path.join(args["data"].root, 'val'),
         num_workers=args["data"].workers,
         batch_size=args["data"].batch_size)
-    # args["model"]["n_classes"] = dm.num_classes
-    # args["model"]["image_size"] = dm.size
-    model = ClassificationEvaluator(**args["model"])
-    from pytorch_lightning.loggers import WandbLogger
+
+    # class ClassificationDALIDataModule(pl.LightningDataModule):
+    #     def __init__(
+    #             self,
+    #             dataset: str,
+    #             train_data_path: Union[str, Path],
+    #             val_data_path: Union[str, Path],
+    #             batch_size: int,
+    #             num_workers: int = 4,
+    #             data_fraction: float = -1.0,
+    #             dali_device: str = "gpu",
+    #     ):
 
     wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
