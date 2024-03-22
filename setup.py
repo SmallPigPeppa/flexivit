@@ -46,7 +46,7 @@ setup(
     keywords=KW,
     install_requires=[
         "torch",
-        "torchvision=",
+        "torchvision",
         "einops",
         "pytorch-lightning",
         "torchmetrics",
