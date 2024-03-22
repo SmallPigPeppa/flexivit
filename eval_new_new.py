@@ -88,14 +88,17 @@ class ClassificationEvaluator(pl.LightningModule):
             lr=self.lr,
             weight_decay=self.wd,
             momentum=0.9)
-        scheduler = LinearWarmupCosineAnnealingLR(
-            optimizer,
-            warmup_epochs=5,
-            max_epochs=self.max_epochs,
-            warmup_start_lr=0.01 * self.lr,
-            eta_min=0.01 * self.lr,
-        )
-        return [optimizer], [scheduler]
+
+        return optimizer
+
+        # scheduler = LinearWarmupCosineAnnealingLR(
+        #     optimizer,
+        #     warmup_epochs=5,
+        #     max_epochs=self.max_epochs,
+        #     warmup_start_lr=0.01 * self.lr,
+        #     eta_min=0.01 * self.lr,
+        # )
+        # return [optimizer], [scheduler]
 
     def training_step(self, batch, batch_idx):
         x, y = batch
