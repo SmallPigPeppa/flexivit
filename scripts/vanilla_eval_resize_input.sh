@@ -1,4 +1,4 @@
-python vanilla_eval_resize_input.py.py \
+python vanilla_eval_resize_input.py \
   --accelerator gpu \
   --devices 8 \
   --precision 16 \
