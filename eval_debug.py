@@ -189,15 +189,18 @@ if __name__ == "__main__":
     from pytorch_lightning.loggers import WandbLogger
 
     # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
-    # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
+    trainer = pl.Trainer.from_argparse_args(args)
+    trainer.datamodule1 = dm_dali
+    trainer.datamodule2 = dm
 
     # trainer.fit(model, dm_dali)
     # trainer.test(model, datamodule=dm)
     # trainer.test(model, datamodule=dm_dali)
     # model.eval()
     # trainer.test(model, datamodule=dm)
-    loader_dali = dm_dali.test_dataloader()
-    loader = dm.test_dataloader()
+    # model.test_step()
+    loader_dali = trainer.datamodule1.test_dataloader()
+    loader = trainer.datamodule2.test_dataloader()
     img_dali = next(loader_dali)
     img = next(loader)
     a = img_dali - img

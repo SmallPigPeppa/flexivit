@@ -1,7 +1,6 @@
 python eval_debug.py \
   --max_epochs 1 \
-  --accelerator gpu \
-  --devices 1 \
+  --accelerator cpu \
   --precision 16 \
   --model.resize_type pi \
   --model.weights vit_base_patch16_224.augreg_in21k_ft_in1k \
@@ -13,6 +12,7 @@ python eval_debug.py \
   --data.crop_pct 0.9 \
   --data.batch_size 1 \
   --model.results_path ./result.csv
+#  --devices 1 \
 
 
 
