@@ -71,12 +71,12 @@ class ClassificationEvaluator(pl.LightningModule):
         # Define loss
         self.loss_fn = CrossEntropyLoss()
 
-        # 冻结除FC层之外的所有层
-        for param in self.net.parameters():
-            param.requires_grad = False
-        # 假设全连接层的名称是 'head'，这在不同的模型中可能有所不同
-        for param in self.net.head.parameters():
-            param.requires_grad = True
+        # # 冻结除FC层之外的所有层
+        # for param in self.net.parameters():
+        #     param.requires_grad = False
+        # # 假设全连接层的名称是 'head'，这在不同的模型中可能有所不同
+        # for param in self.net.head.parameters():
+        #     param.requires_grad = True
 
     # def configure_optimizers(self):
     #     # 只优化全连接层的参数
