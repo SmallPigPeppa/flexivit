@@ -127,11 +127,10 @@ class ClassificationEvaluator(pl.LightningModule):
                 header=not os.path.exists(self.results_path),
             )
 
-
     def test_epoch_end(self, outputs):
         if self.results_path:
             acc = self.acc.compute().detach().cpu().item()
-
+            acc = acc * 100
             # 让所有进程都执行到这里，但只有主进程进行写入操作
             if self.trainer.is_global_zero:
                 column_name = f"{self.image_size}_{self.patch_size}"
@@ -168,10 +167,9 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(args)
     dm = DataModule(**args["data"])
 
-
     for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
                                    (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
-    # for image_size, patch_size in [(32, 4), (56, 4), (64, 8), (112, 8), (224, 16)]:
+        # for image_size, patch_size in [(32, 4), (56, 4), (64, 8), (112, 8), (224, 16)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
