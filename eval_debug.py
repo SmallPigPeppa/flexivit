@@ -227,7 +227,32 @@ if __name__ == "__main__":
     print("Images2 dtype:", images2.dtype, "Labels2 dtype:", labels2.dtype)
 
 
-    print(images1)
-    print(images2)
+    # print(images1)
+    # print(images2)
+    #
+    # import pdb;pdb.set_trace()
 
-    import pdb;pdb.set_trace()
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+    image1 = images1[0].numpy().transpose((1, 2, 0))  # 转换为HWC格式用于显示
+    image2 = images2[0].numpy().transpose((1, 2, 0))  # 转换为HWC格式用于显示
+
+    # 确保图像数据在[0, 1]范围内，这对于显示归一化后的图像很重要
+    image1 = (image1 - image1.min()) / (image1.max() - image1.min())
+    image2 = (image2 - image2.min()) / (image2.max() - image2.min())
+
+    with PdfPages('output_images.pdf') as pdf:
+        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+
+        axs[0].imshow(image1)
+        axs[0].set_title('Image from DataModule 1')
+        axs[0].axis('off')
+
+        axs[1].imshow(image2)
+        axs[1].set_title('Image from DataModule 2')
+        axs[1].axis('off')
+
+        plt.tight_layout()
+        pdf.savefig(fig)  # 保存当前的Figure对象到PDF
+        plt.close()
+
