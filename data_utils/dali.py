@@ -32,9 +32,15 @@ from nvidia.dali import pipeline_def
 from nvidia.dali.plugin.pytorch import DALIGenericIterator, LastBatchPolicy
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-from solo.data.temp_dali_fix import TempDALIGenericIterator
-from solo.utils.misc import omegaconf_select
+from data_utils.temp_dali_fix import TempDALIGenericIterator
+from omegaconf import OmegaConf
 
+def omegaconf_select(cfg, key, default=None):
+    """Wrapper for OmegaConf.select to allow None to be returned instead of 'None'."""
+    value = OmegaConf.select(cfg, key, default=default)
+    if value == "None":
+        return None
+    return value
 
 class RandomGrayScaleConversion:
     def __init__(self, prob: float = 0.2, device: str = "gpu"):
