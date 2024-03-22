@@ -195,6 +195,7 @@ if __name__ == "__main__":
     from data_utils.dali import ClassificationDALIDataModule
 
     dm_dali = ClassificationDALIDataModule(
+        dataset='imagenet',
         train_data_path=os.path.join(args["data"].root, 'train'),
         val_data_path=os.path.join(args["data"].root, 'val'),
         num_workers=args["data"].workers,
