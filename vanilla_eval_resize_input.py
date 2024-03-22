@@ -145,9 +145,9 @@ if __name__ == "__main__":
     dm = DataModule(**args["data"])
 
 
-    # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
-    #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
-    for image_size, patch_size in [(32, 4), (56, 4), (64, 8), (112, 8), (224, 16)]:
+    for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
+                                   (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
+    # for image_size, patch_size in [(32, 4), (56, 4), (64, 8), (112, 8), (224, 16)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
