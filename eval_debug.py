@@ -11,6 +11,7 @@ from data_utils.imagenet_val import DataModule
 import torch
 import torch.optim as optim
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+from data_utils.imagenet_dali import ClassificationDALIDataModule
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -175,33 +176,44 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    dm = DataModule(**args["data"])
-    from data_utils.imagenet_dali import ClassificationDALIDataModule
+    # dm = DataModule(**args["data"])
+    #
+    # dm_dali = ClassificationDALIDataModule(
+    #     train_data_path=os.path.join(args["data"].root, 'train'),
+    #     val_data_path=os.path.join(args["data"].root, 'val'),
+    #     num_workers=args["data"].workers,
+    #     batch_size=args["data"].batch_size)
+    #
+    # model = ClassificationEvaluator(**args["model"])
+    # trainer = pl.Trainer.from_argparse_args(args)
+    # trainer.test(model, datamodule=dm)
+    # trainer.test(model, datamodule=dm_dali)
 
-    dm_dali = ClassificationDALIDataModule(
+    dm1 = DataModule(**args["data"])
+    dm2 = ClassificationDALIDataModule(
         train_data_path=os.path.join(args["data"].root, 'train'),
         val_data_path=os.path.join(args["data"].root, 'val'),
         num_workers=args["data"].workers,
-        batch_size=args["data"].batch_size)
-    # args["model"]["n_classes"] = dm.num_classes
-    # args["model"]["image_size"] = dm.size
-    model = ClassificationEvaluator(**args["model"])
-    from pytorch_lightning.loggers import WandbLogger
+        batch_size=args["data"].batch_size,
+        dali_device='cpu'
+    )
 
-    # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
-    trainer = pl.Trainer.from_argparse_args(args)
-    trainer.datamodule1 = dm_dali
-    trainer.datamodule2 = dm
+    # 分别从两个DataModules加载第一个批次的数据
+    dm1_loader = dm1.test_dataloader()
+    dm2_loader = dm2.test_dataloader()
 
-    # trainer.fit(model, dm_dali)
-    # trainer.test(model, datamodule=dm)
-    # trainer.test(model, datamodule=dm_dali)
-    # model.eval()
-    # trainer.test(model, datamodule=dm)
-    # model.test_step()
-    loader_dali = trainer.datamodule1.test_dataloader()
-    loader = trainer.datamodule2.test_dataloader()
-    img_dali = next(loader_dali)
-    img = next(loader)
-    a = img_dali - img
-    print(a)
+    batch1 = next(iter(dm1_loader))
+    batch2 = next(iter(dm2_loader))
+
+    # 分解批次数据为图像和标签
+    images1, labels1 = batch1
+    images2, labels2 = batch2
+
+    # 比较两个批次的图像和标签
+    # 注意: 这里我们仅仅打印出形状信息和数据类型作为示例
+    # 你可以根据需要进行更深入的比较
+    print("Images1 shape:", images1.shape, "Labels1 shape:", labels1.shape)
+    print("Images2 shape:", images2.shape, "Labels2 shape:", labels2.shape)
+
+    print("Images1 dtype:", images1.dtype, "Labels1 dtype:", labels1.dtype)
+    print("Images2 dtype:", images2.dtype, "Labels2 dtype:", labels2.dtype)
