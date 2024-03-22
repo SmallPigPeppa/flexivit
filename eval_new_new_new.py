@@ -83,44 +83,44 @@ class ClassificationEvaluator(pl.LightningModule):
     #     optimizer = optim.Adam(self.net.head.parameters(), lr=1e-3)
     #     return optimizer
 
-    def configure_optimizers(self):
-        # self.lr=0.1
-        # self.wd=5e-4
+    # def configure_optimizers(self):
+    #     # self.lr=0.1
+    #     # self.wd=5e-4
+    #
+    #     optimizer = torch.optim.SGD(
+    #         self.net.head.parameters(),
+    #         lr=self.lr,
+    #         weight_decay=self.wd,
+    #         momentum=0.9)
+    #
+    #     return optimizer
+    #
+    #     # scheduler = LinearWarmupCosineAnnealingLR(
+    #     #     optimizer,
+    #     #     warmup_epochs=5,
+    #     #     max_epochs=self.max_epochs,
+    #     #     warmup_start_lr=0.01 * self.lr,
+    #     #     eta_min=0.01 * self.lr,
+    #     # )
+    #     # return [optimizer], [scheduler]
 
-        optimizer = torch.optim.SGD(
-            self.net.head.parameters(),
-            lr=self.lr,
-            weight_decay=self.wd,
-            momentum=0.9)
-
-        return optimizer
-
-        # scheduler = LinearWarmupCosineAnnealingLR(
-        #     optimizer,
-        #     warmup_epochs=5,
-        #     max_epochs=self.max_epochs,
-        #     warmup_start_lr=0.01 * self.lr,
-        #     eta_min=0.01 * self.lr,
-        # )
-        # return [optimizer], [scheduler]
-
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-        logits = self(x)
-        loss = self.loss_fn(logits, y)
-        acc = self.acc(logits, y)
-        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        self.log('train_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        x, y = batch
-        logits = self(x)
-        loss = self.loss_fn(logits, y)
-        acc = self.acc(logits, y)
-        self.log('val_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        self.log('val_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        return {'val_loss': loss, 'val_acc': acc}
+    # def training_step(self, batch, batch_idx):
+    #     x, y = batch
+    #     logits = self(x)
+    #     loss = self.loss_fn(logits, y)
+    #     acc = self.acc(logits, y)
+    #     self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+    #     self.log('train_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+    #     return loss
+    #
+    # def validation_step(self, batch, batch_idx):
+    #     x, y = batch
+    #     logits = self(x)
+    #     loss = self.loss_fn(logits, y)
+    #     acc = self.acc(logits, y)
+    #     self.log('val_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+    #     self.log('val_acc', acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+    #     return {'val_loss': loss, 'val_acc': acc}
 
     def forward(self, x):
         return self.net(x)
