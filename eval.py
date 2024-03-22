@@ -26,17 +26,17 @@ from flexivit_pytorch.utils import resize_abs_pos_embed
 
 class DataModule(pl.LightningDataModule):
     def __init__(
-        self,
-        is_lmdb: bool = False,
-        root: str = "data/",
-        num_classes: int = 1000,
-        size: int = 224,
-        crop_pct: float = 1.0,
-        interpolation: str = "bicubic",
-        mean: Union[Sequence[float], str] = (0.485, 0.456, 0.406),
-        std: Union[Sequence[float], str] = (0.229, 0.224, 0.225),
-        batch_size: int = 256,
-        workers: int = 4,
+            self,
+            is_lmdb: bool = False,
+            root: str = "data/",
+            num_classes: int = 1000,
+            size: int = 224,
+            crop_pct: float = 1.0,
+            interpolation: str = "bicubic",
+            mean: Union[Sequence[float], str] = (0.485, 0.456, 0.406),
+            std: Union[Sequence[float], str] = (0.229, 0.224, 0.225),
+            batch_size: int = 256,
+            workers: int = 4,
     ):
         """Classification Evaluation Datamodule
 
@@ -109,6 +109,7 @@ class DataModule(pl.LightningDataModule):
             num_workers=self.workers,
             pin_memory=True,
         )
+
     def val_dataloader(self):
         return DataLoader(
             self.test_dataset,
@@ -121,10 +122,10 @@ class DataModule(pl.LightningDataModule):
 
 class ImageFolderLMDB(Dataset):
     def __init__(
-        self,
-        db_path: str,
-        transform: Optional[Callable] = None,
-        target_transform: Optional[Callable] = None,
+            self,
+            db_path: str,
+            transform: Optional[Callable] = None,
+            target_transform: Optional[Callable] = None,
     ):
         self.db_path = db_path
         self.env = lmdb.open(
@@ -176,13 +177,13 @@ class ImageFolderLMDB(Dataset):
 
 class ClassificationEvaluator(pl.LightningModule):
     def __init__(
-        self,
-        weights: str,
-        num_classes: int,
-        image_size: int = 224,
-        patch_size: int = 16,
-        resize_type: str = "pi",
-        results_path: Optional[str] = None,
+            self,
+            weights: str,
+            num_classes: int,
+            image_size: int = 224,
+            patch_size: int = 16,
+            resize_type: str = "pi",
+            results_path: Optional[str] = None,
     ):
         """Classification Evaluator
 
