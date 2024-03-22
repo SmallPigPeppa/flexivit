@@ -141,27 +141,27 @@ class ClassificationEvaluator(pl.LightningModule):
 
         return {"test_acc": acc}
 
-    def test_epoch_end(self, _):
-        if self.results_path:
-            acc = self.acc.compute().detach().cpu().item()
-            results = pd.DataFrame(
-                {
-                    "model": [self.weights],
-                    "acc": [round(acc, 4)],
-                    "patch_size": [self.patch_size],
-                    "image_size": [self.image_size],
-                    "resize_type": [self.resize_type],
-                }
-            )
-
-            if not os.path.exists(os.path.dirname(self.results_path)):
-                os.makedirs(os.path.dirname(self.results_path))
-
-            results.to_csv(
-                self.results_path,
-                mode="a",
-                header=not os.path.exists(self.results_path),
-            )
+    # def test_epoch_end(self, _):
+    #     if self.results_path:
+    #         acc = self.acc.compute().detach().cpu().item()
+    #         results = pd.DataFrame(
+    #             {
+    #                 "model": [self.weights],
+    #                 "acc": [round(acc, 4)],
+    #                 "patch_size": [self.patch_size],
+    #                 "image_size": [self.image_size],
+    #                 "resize_type": [self.resize_type],
+    #             }
+    #         )
+    #
+    #         if not os.path.exists(os.path.dirname(self.results_path)):
+    #             os.makedirs(os.path.dirname(self.results_path))
+    #
+    #         results.to_csv(
+    #             self.results_path,
+    #             mode="a",
+    #             header=not os.path.exists(self.results_path),
+    #         )
 
 
 if __name__ == "__main__":
