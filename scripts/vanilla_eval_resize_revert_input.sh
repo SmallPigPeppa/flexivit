@@ -15,7 +15,7 @@
 
 
 #vit_base_patch16_224.augreg_in21k_ft_in1k
-python vanilla_eval_resize_reevert_input.py \
+python vanilla_eval_resize_revert_input.py \
   --max_epochs 1 \
   --accelerator gpu \
   --devices 8 \
@@ -28,6 +28,6 @@ python vanilla_eval_resize_reevert_input.py \
   --data.size 224 \
   --data.crop_pct 0.9 \
   --data.batch_size 256 \
-  --model.results_path ./vanilla_eval_resize_reevert_input.csv
+  --model.results_path ./vanilla_eval_resize_revert_input.csv
 
 
