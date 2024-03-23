@@ -134,7 +134,7 @@ class ClassificationEvaluator(pl.LightningModule):
             acc = acc * 100
             # 让所有进程都执行到这里，但只有主进程进行写入操作
             if self.trainer.is_global_zero:
-                column_name = f"{self.image_size}_{self.patch_size}"
+                column_name = f"{self.image_size_d}_{self.patch_size}"
                 # new_acc_value = round(acc, 4)
 
                 if os.path.exists(self.results_path):
