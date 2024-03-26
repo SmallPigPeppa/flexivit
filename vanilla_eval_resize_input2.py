@@ -129,17 +129,16 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
 
-
 if __name__ == "__main__":
     parser = LightningArgumentParser()
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
     # parser.add_lightning_class_args(DataModule, "data")
     parser.add_lightning_class_args(ClassificationEvaluator, "model")
-    parser.add_argument("--batch_size", type=int, default=32)
-
-
-    parser.link_arguments("data.num_classes", "model.num_classes")
-    parser.link_arguments("data.size", "model.image_size")
+    parser.add_argument("--batch_size", type=int, default=256)
+    parser.add_argument("--works", type=int, default=4)
+    parser.add_argument("--root", type=str, default='./data')
+    # parser.link_arguments("data.num_classes", "model.num_classes")
+    # parser.link_arguments("data.size", "model.image_size")
     # parser.link_arguments("max_epochs", "model.max_epochs")
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
@@ -158,8 +157,8 @@ if __name__ == "__main__":
         model = ClassificationEvaluator(**args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
         transform = timm.data.create_transform(**data_config, is_training=False)
-        val_dataset = ImageFolder(root=os.path.join(args["data"].root, 'val'), transform=transform)
-        val_loader = DataLoader(val_dataset, batch_size=args["data"].batch_size, num_workers=args["data"].works,
+        val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=transform)
+        val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
                                 shuffle=False, pin_memory=True)
 
         trainer.test(model, dataloaders=val_loader)
