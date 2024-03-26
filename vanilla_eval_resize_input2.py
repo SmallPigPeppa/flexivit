@@ -81,8 +81,8 @@ class ClassificationEvaluator(pl.LightningModule):
         self.net.load_state_dict(state_dict, strict=True)
 
         # Define metrics
-        # self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
-        self.acc = Accuracy(num_classes=self.num_classes, top_k=1)
+        self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
+        # self.acc = Accuracy(num_classes=self.num_classes, top_k=1)
 
         # Define loss
         self.loss_fn = CrossEntropyLoss()
