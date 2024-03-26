@@ -183,5 +183,9 @@ if __name__ == "__main__":
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
-        model = model.eval()
+        net = timm.create_model('vit_base_patch16_224.augreg_in21k_ft_in1k', pretrained=True)
+        # vit_base_patch16_224.augreg_in21k_ft_in1k
+        # model.eval()
+        # model = model.eval()
+        model.net = net
         trainer.test(model, datamodule=dm)
