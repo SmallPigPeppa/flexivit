@@ -22,7 +22,7 @@ transform = timm.data.create_transform(**data_config, is_training=False)
 from torchvision.transforms import InterpolationMode
 from torchvision import transforms
 transform = transforms.Compose([
-    transforms.Resize(256, interpolation=InterpolationMode.BICUBIC),
+    transforms.Resize(256, interpolation=InterpolationMode.BILINEAR),
     transforms.CenterCrop(224),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.228, 0.224, 0.225]),
