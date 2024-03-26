@@ -201,7 +201,7 @@ if __name__ == "__main__":
         # model.eval()
         # model = model.eval()
         model.net = net
-        trainer.test(model, datamodule=dm)
+        trainer.test(model, dataloaders=val_loader)
         # 准确率计算
         correct_top1 = 0
         correct_top5 = 0
