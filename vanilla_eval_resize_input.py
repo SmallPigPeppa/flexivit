@@ -11,7 +11,8 @@ from data_utils.imagenet_val import DataModule
 import torch.nn.functional as F
 from flexivit_pytorch import (interpolate_resize_patch_embed, pi_resize_patch_embed)
 from flexivit_pytorch.utils import resize_abs_pos_embed
-
+from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader
 
 class ClassificationEvaluator(pl.LightningModule):
     def __init__(
@@ -90,21 +91,19 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def test_step(self, batch, _):
         x, y = batch
-        x = F.interpolate(x, size=self.image_size, mode='bilinear')
+        x = F.interpolate(x, size=self.image_size_d, mode='bilinear')
+        x = F.interpolate(x, size=224, mode='bilinear')
 
         # Pass through network
-        # pred = self(x)
-        pred = self(x).softmax(dim=1)
+        pred = self(x)
         loss = self.loss_fn(pred, y)
 
         # Get accuracy
         acc = self.acc(pred, y)
 
         # Log
-        self.log(f"test_loss", loss, sync_dist=True)
-        self.log(f"test_acc", acc, sync_dist=True)
-        # self.log(f"test_loss", loss)
-        # self.log(f"test_acc", acc)
+        self.log(f"test_loss", loss)
+        self.log(f"test_acc", acc)
 
         return loss
 
@@ -136,7 +135,7 @@ class ClassificationEvaluator(pl.LightningModule):
             acc = acc * 100
             # 让所有进程都执行到这里，但只有主进程进行写入操作
             if self.trainer.is_global_zero:
-                column_name = f"{self.image_size}_{self.patch_size}"
+                column_name = f"{self.image_size_d}_{self.patch_size}"
                 # new_acc_value = round(acc, 4)
 
                 if os.path.exists(self.results_path):
@@ -157,26 +156,33 @@ class ClassificationEvaluator(pl.LightningModule):
 if __name__ == "__main__":
     parser = LightningArgumentParser()
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
-    parser.add_lightning_class_args(DataModule, "data")
+    # parser.add_lightning_class_args(DataModule, "data")
     parser.add_lightning_class_args(ClassificationEvaluator, "model")
-    parser.link_arguments("data.num_classes", "model.num_classes")
-    parser.link_arguments("data.size", "model.image_size")
+    parser.add_argument("--batch_size", type=int, default=256)
+    parser.add_argument("--works", type=int, default=4)
+    parser.add_argument("--root", type=str, default='./data')
+    # parser.link_arguments("data.num_classes", "model.num_classes")
+    # parser.link_arguments("data.size", "model.image_size")
     # parser.link_arguments("max_epochs", "model.max_epochs")
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
     # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
-    # trainer = pl.Trainer.from_argparse_args(args, devices=1, num_nodes=1)
     trainer = pl.Trainer.from_argparse_args(args)
-    dm = DataModule(**args["data"])
+    # dm = DataModule(**args["data"])
 
-    for image_size, patch_size in [(224, 16)]:
-        # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
-        #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
-        # for image_size, patch_size in [(32, 4), (56, 4), (64, 8), (112, 8), (224, 16)]:
-        args["model"].image_size = image_size
+    for image_size, patch_size in [(32, 16), (48, 16), (64, 16), (80, 16), (96, 16), (112, 16), (128, 16), (144, 16),
+                                   (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
+        args["model"].image_size = 224
+        # args["model"].image_size_d = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
-        model = model.eval()
-        trainer.test(model, datamodule=dm)
+        model.image_size_d = image_size
+        # trainer.test(model, datamodule=dm)
+        data_config = timm.data.resolve_model_data_config(model.net)
+        transform = timm.data.create_transform(**data_config, is_training=False)
+        val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=transform)
+        val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
+                                shuffle=False, pin_memory=True)
+        trainer.test(model, dataloaders=val_loader)
