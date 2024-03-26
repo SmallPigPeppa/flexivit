@@ -11,6 +11,8 @@ from data_utils.imagenet_val import DataModule
 import torch.nn.functional as F
 from flexivit_pytorch import (interpolate_resize_patch_embed, pi_resize_patch_embed)
 from flexivit_pytorch.utils import resize_abs_pos_embed
+from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -151,21 +153,10 @@ if __name__ == "__main__":
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
-        # net = timm.create_model('vit_base_patch16_224.augreg_in21k_ft_in1k', pretrained=True)
-
-        from torchvision.datasets import ImageFolder
-        from torch.utils.data import DataLoader
-        import torch
-        from tqdm import tqdm
-
-        imagenet_val_dir = '/mnt/mmtech01/dataset/lzy/ILSVRC2012/val'
         data_config = timm.data.resolve_model_data_config(model.net)
         transform = timm.data.create_transform(**data_config, is_training=False)
-        val_dataset = ImageFolder(root=imagenet_val_dir, transform=transform)
-        val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False, num_workers=4, pin_memory=True)
+        val_dataset = ImageFolder(root=os.path.join(args["data"].root, 'val'), transform=transform)
+        val_loader = DataLoader(val_dataset, batch_size=args["data"].batch_size, num_workers=args["data"].works,
+                                shuffle=False, pin_memory=True)
 
-        # vit_base_patch16_224.augreg_in21k_ft_in1k
-        # model.eval()
-        # model = model.eval()
-        # model.net = net
         trainer.test(model, dataloaders=val_loader)
