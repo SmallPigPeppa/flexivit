@@ -176,8 +176,6 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(args, accelerator="gpu", strategy="ddp")
     dm = DataModule(**args["data"])
 
-
-
     for image_size, patch_size in [(224, 16)]:
         # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
         #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
@@ -191,11 +189,12 @@ if __name__ == "__main__":
         from torch.utils.data import DataLoader
         import torch
         from tqdm import tqdm
+
         imagenet_val_dir = '/mnt/mmtech01/dataset/lzy/ILSVRC2012/val'
         data_config = timm.data.resolve_model_data_config(net)
         transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=imagenet_val_dir, transform=transform)
-        val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False, num_workers=4)
+        val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False, num_workers=4, pin_memory=True)
 
         # vit_base_patch16_224.augreg_in21k_ft_in1k
         # model.eval()
