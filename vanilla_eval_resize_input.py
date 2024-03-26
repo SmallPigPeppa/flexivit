@@ -101,10 +101,10 @@ class ClassificationEvaluator(pl.LightningModule):
         acc = self.acc(pred, y)
 
         # Log
-        # self.log(f"test_loss", loss, sync_dist=True)
-        # self.log(f"test_acc", acc, sync_dist=True)
-        self.log(f"test_loss", loss)
-        self.log(f"test_acc", acc)
+        self.log(f"test_loss", loss, sync_dist=True)
+        self.log(f"test_acc", acc, sync_dist=True)
+        # self.log(f"test_loss", loss)
+        # self.log(f"test_acc", acc)
 
         return loss
 
@@ -167,8 +167,8 @@ if __name__ == "__main__":
 
     # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
-    trainer = pl.Trainer.from_argparse_args(args, devices=1, num_nodes=1)
-    # trainer = pl.Trainer.from_argparse_args(args)
+    # trainer = pl.Trainer.from_argparse_args(args, devices=1, num_nodes=1)
+    trainer = pl.Trainer.from_argparse_args(args)
     dm = DataModule(**args["data"])
 
     for image_size, patch_size in [(224, 16)]:
