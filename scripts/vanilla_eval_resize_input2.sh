@@ -23,7 +23,7 @@ python vanilla_eval_resize_input2.py \
   --max_epochs 1 \
   --accelerator gpu \
   --devices 8 \
-  --workers 4 \
+  --works 4 \
   --batch_size 256 \
   --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --model.resize_type pi \
