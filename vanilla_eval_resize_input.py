@@ -174,4 +174,5 @@ if __name__ == "__main__":
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
+        model = model.eval()
         trainer.test(model, datamodule=dm)
