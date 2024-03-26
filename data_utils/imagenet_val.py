@@ -82,7 +82,7 @@ class DataModule(pl.LightningDataModule):
         self.transforms = transforms
 
     def setup(self, stage="test"):
-        self.test_dataset = ImageFolder(root=os.path.join(self.root, 'val'), transform=self.transform)
+        self.test_dataset = ImageFolder(root=os.path.join(self.root, 'val'), transform=self.transforms)
         print(f"Using dataset from {self.root}")
 
     def test_dataloader(self):
