@@ -7,7 +7,6 @@ from pytorch_lightning.cli import LightningArgumentParser
 from timm import create_model
 from torch.nn import CrossEntropyLoss
 from torchmetrics.classification.accuracy import Accuracy
-from data_utils.imagenet_val import DataModule
 import torch.nn.functional as F
 from flexivit_pytorch import (interpolate_resize_patch_embed, pi_resize_patch_embed)
 from flexivit_pytorch.utils import resize_abs_pos_embed
@@ -156,30 +155,23 @@ class ClassificationEvaluator(pl.LightningModule):
 if __name__ == "__main__":
     parser = LightningArgumentParser()
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
-    # parser.add_lightning_class_args(DataModule, "data")
     parser.add_lightning_class_args(ClassificationEvaluator, "model")
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--works", type=int, default=4)
     parser.add_argument("--root", type=str, default='./data')
-    # parser.link_arguments("data.num_classes", "model.num_classes")
-    # parser.link_arguments("data.size", "model.image_size")
-    # parser.link_arguments("max_epochs", "model.max_epochs")
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
     # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     trainer = pl.Trainer.from_argparse_args(args)
-    # dm = DataModule(**args["data"])
 
     for image_size, patch_size in [(32, 16), (48, 16), (64, 16), (80, 16), (96, 16), (112, 16), (128, 16), (144, 16),
                                    (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
         args["model"].image_size = 224
-        # args["model"].image_size_d = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
         model.image_size_d = image_size
-        # trainer.test(model, datamodule=dm)
         data_config = timm.data.resolve_model_data_config(model.net)
         transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=transform)
