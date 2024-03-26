@@ -206,6 +206,8 @@ if __name__ == "__main__":
         correct_top1 = 0
         correct_top5 = 0
         total = 0
+        model.eval()
+        model.cuda()  # 使用GPU
 
         with torch.no_grad():
             for images, labels in tqdm(val_loader, desc="Evaluating"):
