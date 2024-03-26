@@ -59,13 +59,18 @@ class DataModule(pl.LightningDataModule):
         else:
             self.std = std
 
-        self.transforms = transforms_imagenet_eval(
-            img_size=self.size,
-            crop_pct=self.crop_pct,
-            interpolation=self.interpolation,
-            mean=self.mean,
-            std=self.std,
-        )
+        # self.transforms = transforms_imagenet_eval(
+        #     img_size=self.size,
+        #     crop_pct=self.crop_pct,
+        #     interpolation=self.interpolation,
+        #     mean=self.mean,
+        #     std=self.std,
+        # )
+        import timm
+        model = 'vit_base_patch16_224.augreg_in21k_ft_in1k'
+        data_config = timm.data.resolve_model_data_config(model)
+        transforms = timm.data.create_transform(**data_config, is_training=False)
+        self.transforms = transforms
 
     def setup(self, stage="test"):
         self.test_dataset = ImageFolder(root=os.path.join(self.root, 'val'), transform=self.transforms)

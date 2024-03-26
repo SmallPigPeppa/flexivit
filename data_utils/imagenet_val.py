@@ -60,20 +60,26 @@ class DataModule(pl.LightningDataModule):
         else:
             self.std = std
 
-        self.transforms = transforms_imagenet_eval(
-            img_size=self.size,
-            crop_pct=self.crop_pct,
-            interpolation=self.interpolation,
-            mean=self.mean,
-            std=self.std,
-        )
-        from torchvision.transforms import InterpolationMode
-        self.transform = transforms.Compose([
-            transforms.Resize(256, interpolation=InterpolationMode.BICUBIC),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.228, 0.224, 0.225]),
-        ])
+        # self.transforms = transforms_imagenet_eval(
+        #     img_size=self.size,
+        #     crop_pct=self.crop_pct,
+        #     interpolation=self.interpolation,
+        #     mean=self.mean,
+        #     std=self.std,
+        # )
+        # from torchvision.transforms import InterpolationMode
+        # self.transform = transforms.Compose([
+        #     transforms.Resize(256, interpolation=InterpolationMode.BICUBIC),
+        #     transforms.CenterCrop(224),
+        #     transforms.ToTensor(),
+        #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.228, 0.224, 0.225]),
+        # ])
+
+        import timm
+        model = 'vit_base_patch16_224.augreg_in21k_ft_in1k'
+        data_config = timm.data.resolve_model_data_config(model)
+        transforms = timm.data.create_transform(**data_config, is_training=False)
+        self.transforms = transforms
 
     def setup(self, stage="test"):
         self.test_dataset = ImageFolder(root=os.path.join(self.root, 'val'), transform=self.transform)

@@ -44,7 +44,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Load original weights
         print(f"Loading weights {self.weights}")
-        orig_net = create_model(self.weights, pretrained=True, pretrained_cfg='in21k_ft_in1k')
+        orig_net = create_model(self.weights, pretrained=True)
         state_dict = orig_net.state_dict()
 
         # Adjust patch embedding
