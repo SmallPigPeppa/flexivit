@@ -129,11 +129,15 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
 
+
 if __name__ == "__main__":
     parser = LightningArgumentParser()
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
-    parser.add_lightning_class_args(DataModule, "data")
+    # parser.add_lightning_class_args(DataModule, "data")
     parser.add_lightning_class_args(ClassificationEvaluator, "model")
+    parser.add_argument("--batch_size", type=int, default=32)
+
+
     parser.link_arguments("data.num_classes", "model.num_classes")
     parser.link_arguments("data.size", "model.image_size")
     # parser.link_arguments("max_epochs", "model.max_epochs")
@@ -143,7 +147,7 @@ if __name__ == "__main__":
     # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     trainer = pl.Trainer.from_argparse_args(args)
-    dm = DataModule(**args["data"])
+    # dm = DataModule(**args["data"])
 
     for image_size, patch_size in [(224, 16)]:
         # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
