@@ -113,7 +113,6 @@ class ClassificationEvaluator(pl.LightningModule):
             # 让所有进程都执行到这里，但只有主进程进行写入操作
             if self.trainer.is_global_zero:
                 column_name = f"{self.image_size}_{self.patch_size}"
-                # new_acc_value = round(acc, 4)
 
                 if os.path.exists(self.results_path):
                     # 结果文件已存在，读取现有数据
