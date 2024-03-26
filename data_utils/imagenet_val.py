@@ -1,7 +1,7 @@
 from typing import Callable, Optional, Sequence, Union
 import pytorch_lightning as pl
-from timm.data import (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD,
-                       OPENAI_CLIP_MEAN, OPENAI_CLIP_STD)
+# from timm.data import (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD,
+#                        OPENAI_CLIP_MEAN, OPENAI_CLIP_STD)
 from timm.data.transforms_factory import transforms_imagenet_eval
 from torch.utils.data import DataLoader, Dataset
 from torchvision.datasets import ImageFolder
@@ -46,19 +46,19 @@ class DataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.workers = workers
 
-        if mean == "clip":
-            self.mean = OPENAI_CLIP_MEAN
-        elif mean == "imagenet":
-            self.mean = IMAGENET_DEFAULT_MEAN
-        else:
-            self.mean = mean
-
-        if std == "clip":
-            self.std = OPENAI_CLIP_STD
-        elif std == "imagenet":
-            self.std = IMAGENET_DEFAULT_STD
-        else:
-            self.std = std
+        # if mean == "clip":
+        #     self.mean = OPENAI_CLIP_MEAN
+        # elif mean == "imagenet":
+        #     self.mean = IMAGENET_DEFAULT_MEAN
+        # else:
+        #     self.mean = mean
+        #
+        # if std == "clip":
+        #     self.std = OPENAI_CLIP_STD
+        # elif std == "imagenet":
+        #     self.std = IMAGENET_DEFAULT_STD
+        # else:
+        #     self.std = std
 
         # self.transforms = transforms_imagenet_eval(
         #     img_size=self.size,
