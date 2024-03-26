@@ -176,6 +176,8 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(args, accelerator="gpu", strategy="ddp")
     dm = DataModule(**args["data"])
 
+
+
     for image_size, patch_size in [(224, 16)]:
         # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
         #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
@@ -184,8 +186,37 @@ if __name__ == "__main__":
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
         net = timm.create_model('vit_base_patch16_224.augreg_in21k_ft_in1k', pretrained=True)
+
+        from torchvision.datasets import ImageFolder
+        from torch.utils.data import DataLoader
+        import torch
+        from tqdm import tqdm
+        imagenet_val_dir = '/mnt/mmtech01/dataset/lzy/ILSVRC2012/val'
+        data_config = timm.data.resolve_model_data_config(net)
+        transform = timm.data.create_transform(**data_config, is_training=False)
+        val_dataset = ImageFolder(root=imagenet_val_dir, transform=transform)
+        val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False, num_workers=4)
+
         # vit_base_patch16_224.augreg_in21k_ft_in1k
         # model.eval()
         # model = model.eval()
         model.net = net
         trainer.test(model, datamodule=dm)
+        # 准确率计算
+        correct_top1 = 0
+        correct_top5 = 0
+        total = 0
+
+        with torch.no_grad():
+            for images, labels in tqdm(val_loader, desc="Evaluating"):
+                images, labels = images.cuda(), labels.cuda()
+                outputs = model(images)
+                _, predicted_top5 = outputs.topk(5, 1, True, True)
+                predicted_top1 = predicted_top5[:, :1]
+
+                total += labels.size(0)
+                correct_top1 += (predicted_top1 == labels.view(-1, 1)).sum().item()
+                correct_top5 += (predicted_top5 == labels.view(-1, 1)).any(dim=1).sum().item()
+
+        print(f'Top-1 Accuracy: {100 * correct_top1 / total:.2f}%')
+        print(f'Top-5 Accuracy: {100 * correct_top5 / total:.2f}%')
