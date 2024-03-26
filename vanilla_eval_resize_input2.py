@@ -148,9 +148,9 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(args)
     # dm = DataModule(**args["data"])
 
-    for image_size, patch_size in [(224, 16)]:
-        # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
-        #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
+    # for image_size, patch_size in [(224, 16)]:
+    for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
+                                   (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
         # for image_size, patch_size in [(32, 4), (56, 4), (64, 8), (112, 8), (224, 16)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
@@ -160,5 +160,4 @@ if __name__ == "__main__":
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=transform)
         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
                                 shuffle=False, pin_memory=True)
-
         trainer.test(model, dataloaders=val_loader)
