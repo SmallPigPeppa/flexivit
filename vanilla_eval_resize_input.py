@@ -93,7 +93,8 @@ class ClassificationEvaluator(pl.LightningModule):
         x = F.interpolate(x, size=self.image_size, mode='bilinear')
 
         # Pass through network
-        pred = self(x)
+        # pred = self(x)
+        pred = self(x).softmax(dim=1)
         loss = self.loss_fn(pred, y)
 
         # Get accuracy
