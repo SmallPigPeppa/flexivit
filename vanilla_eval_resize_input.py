@@ -165,7 +165,7 @@ if __name__ == "__main__":
 
     # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
-    trainer = pl.Trainer.from_argparse_args(args)
+    trainer = pl.Trainer.from_argparse_args(args, devices=1, num_nodes=1)
     dm = DataModule(**args["data"])
 
     for image_size, patch_size in [(224, 16)]:
