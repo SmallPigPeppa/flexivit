@@ -31,6 +31,6 @@ python vanilla_eval_resize_revert_input2.py \
   --model.num_classes 1000 \
   --model.patch_size 16 \
   --model.image_size 224 \
-  --model.results_path ./vit_base_patch16_224.augreg2_in21k_ft_in1k.csv
+  --model.results_path ./resize_model_vit_base_patch16_224.augreg2_in21k_ft_in1k.csv
 
 
