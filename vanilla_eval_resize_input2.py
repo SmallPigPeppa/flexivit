@@ -201,23 +201,23 @@ if __name__ == "__main__":
         # model = model.eval()
         model.net = net
         trainer.test(model, dataloaders=val_loader)
-        # 准确率计算
-        correct_top1 = 0
-        correct_top5 = 0
-        total = 0
-        model.eval()
-        model.cuda()  # 使用GPU
-
-        with torch.no_grad():
-            for images, labels in tqdm(val_loader, desc="Evaluating"):
-                images, labels = images.cuda(), labels.cuda()
-                outputs = model(images)
-                _, predicted_top5 = outputs.topk(5, 1, True, True)
-                predicted_top1 = predicted_top5[:, :1]
-
-                total += labels.size(0)
-                correct_top1 += (predicted_top1 == labels.view(-1, 1)).sum().item()
-                correct_top5 += (predicted_top5 == labels.view(-1, 1)).any(dim=1).sum().item()
-
-        print(f'Top-1 Accuracy: {100 * correct_top1 / total:.2f}%')
-        print(f'Top-5 Accuracy: {100 * correct_top5 / total:.2f}%')
+        # # 准确率计算
+        # correct_top1 = 0
+        # correct_top5 = 0
+        # total = 0
+        # model.eval()
+        # model.cuda()  # 使用GPU
+        #
+        # with torch.no_grad():
+        #     for images, labels in tqdm(val_loader, desc="Evaluating"):
+        #         images, labels = images.cuda(), labels.cuda()
+        #         outputs = model(images)
+        #         _, predicted_top5 = outputs.topk(5, 1, True, True)
+        #         predicted_top1 = predicted_top5[:, :1]
+        #
+        #         total += labels.size(0)
+        #         correct_top1 += (predicted_top1 == labels.view(-1, 1)).sum().item()
+        #         correct_top5 += (predicted_top5 == labels.view(-1, 1)).any(dim=1).sum().item()
+        #
+        # print(f'Top-1 Accuracy: {100 * correct_top1 / total:.2f}%')
+        # print(f'Top-5 Accuracy: {100 * correct_top5 / total:.2f}%')
