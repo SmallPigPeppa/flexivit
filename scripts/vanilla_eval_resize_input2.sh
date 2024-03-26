@@ -15,7 +15,7 @@
 
 
 #vit_base_patch16_224.augreg_in21k_ft_in1k
-python vanilla_eval_resize_input.py \
+python vanilla_eval_resize_input2.py \
   --max_epochs 1 \
   --accelerator gpu \
   --devices 8 \
