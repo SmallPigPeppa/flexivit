@@ -1,5 +1,6 @@
 python uniViT_train.py \
   --max_epochs 10 \
+  --precision 16 \
   --accelerator gpu \
   --devices 8 \
   --works 4 \
