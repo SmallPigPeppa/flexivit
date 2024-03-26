@@ -78,7 +78,7 @@ class ClassificationEvaluator(pl.LightningModule):
             patch_size=self.patch_size,
             num_classes=self.num_classes,
         )
-        self.net.load_state_dict(state_dict, strict=True)
+        self.net.load_state_dict(state_dict, strict=True).to(self.device)
 
         # Define metrics
         self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
@@ -106,7 +106,7 @@ class ClassificationEvaluator(pl.LightningModule):
         # self.log(f"test_loss", loss, sync_dist=True,on_epoch=True)
         # self.log(f"test_acc", acc, sync_dist=True,on_epoch=True)
         # log the outputs!
-        self.log_dict({'test_loss': loss, 'test_acc': acc},sync_dist=True,on_epoch=True)
+        self.log_dict({'test_loss': loss, 'test_acc': acc}, sync_dist=True, on_epoch=True)
         # self.log(f"test_loss", loss)
         # self.log(f"test_acc", acc)
 
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     # trainer = pl.Trainer.from_argparse_args(args, devices=1, num_nodes=1)
     # trainer = pl.Trainer.from_argparse_args(args)
-    trainer = pl.Trainer.from_argparse_args(args,accelerator="gpu", strategy="ddp")
+    trainer = pl.Trainer.from_argparse_args(args, accelerator="gpu", strategy="ddp")
     dm = DataModule(**args["data"])
 
     for image_size, patch_size in [(224, 16)]:
