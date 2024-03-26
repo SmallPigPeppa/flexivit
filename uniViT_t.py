@@ -1,5 +1,4 @@
 import torch
-from flexivit_pytorch import FlexiVisionTransformer
 
 
 from timm import create_model
@@ -28,7 +27,11 @@ net = create_model(
     "vit_base_patch16_224.augreg2_in21k_ft_in1k", img_size=image_size, patch_size=new_patch_size
 )
 net.load_state_dict(state_dict, strict=True)
+print(net.pos_embed)
 
 print(net)
+
+
+
 
 

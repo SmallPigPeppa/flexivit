@@ -15,6 +15,7 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from pytorch_lightning.loggers import WandbLogger
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+from timm.models._manipulate import checkpoint_seq
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -89,8 +90,8 @@ class ClassificationEvaluator(pl.LightningModule):
         # Define loss
         self.loss_fn = CrossEntropyLoss()
 
-    def forward(self, x):
-        return self.net(x)
+    # def forward(self, x):
+    #     return self.net(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -174,6 +175,33 @@ class ClassificationEvaluator(pl.LightningModule):
         )
         return [optimizer], [scheduler]
 
+    def forward_features(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.net.patch_embed(x)
+        x = self.net._pos_embed(x)
+        x = self.net.patch_drop(x)
+        x = self.net.norm_pre(x)
+        if self.net.grad_checkpointing and not torch.jit.is_scripting():
+            x = checkpoint_seq(self.net.blocks, x)
+        else:
+            x = self.net.blocks(x)
+        x = self.net.norm(x)
+        return x
+
+    def forward_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
+        if self.net.attn_pool is not None:
+            x = self.net.attn_pool(x)
+        elif self.net.global_pool == 'avg':
+            x = x[:, self.net.num_prefix_tokens:].mean(dim=1)
+        elif self.net.global_pool:
+            x = x[:, 0]  # class token
+        x = self.net.fc_norm(x)
+        x = self.net.head_drop(x)
+        return x if pre_logits else self.net.head(x)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.forward_features(x)
+        x = self.forward_head(x)
+        return x
 
 if __name__ == "__main__":
     parser = LightningArgumentParser()
@@ -184,9 +212,9 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     # args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
-    trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
-    # trainer = pl.Trainer.from_argparse_args(args)
+    # wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
+    # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
+    trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
     for image_size, patch_size in [(224, 16)]:
@@ -203,3 +231,4 @@ if __name__ == "__main__":
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
         trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+        trainer.test(model, dataloaders=val_loader)
