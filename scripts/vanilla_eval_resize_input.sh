@@ -1,4 +1,4 @@
-python vanilla_eval_resize_weight.py \
+python vanilla_eval_resize_input.py \
   --max_epochs 1 \
   --accelerator gpu \
   --devices 8 \
@@ -10,6 +10,6 @@ python vanilla_eval_resize_weight.py \
   --model.num_classes 1000 \
   --model.patch_size 16 \
   --model.image_size 224 \
-  --model.results_path ./resize_weight.csv
+  --model.results_path ./resize_input.csv
 
 
