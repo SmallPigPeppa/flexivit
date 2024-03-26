@@ -159,7 +159,7 @@ if __name__ == "__main__":
         from tqdm import tqdm
 
         imagenet_val_dir = '/mnt/mmtech01/dataset/lzy/ILSVRC2012/val'
-        data_config = timm.data.resolve_model_data_config(net)
+        data_config = timm.data.resolve_model_data_config(model.net)
         transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=imagenet_val_dir, transform=transform)
         val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False, num_workers=4, pin_memory=True)
