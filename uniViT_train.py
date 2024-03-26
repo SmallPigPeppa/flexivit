@@ -99,7 +99,7 @@ class ClassificationEvaluator(pl.LightningModule):
         acc = self.acc(logits, y)
 
         # out dict
-        out_dict = {'loss': loss, 'train_acc': acc}
+        out_dict = {'loss': loss, 'train_loss': loss, 'train_acc': acc}
         # Log
         self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
         return out_dict
