@@ -19,6 +19,15 @@ model.cuda()  # 使用GPU
 data_config = timm.data.resolve_model_data_config(model)
 transform = timm.data.create_transform(**data_config, is_training=False)
 
+from torchvision.transforms import InterpolationMode
+from torchvision import transforms
+transform = transforms.Compose([
+    transforms.Resize(256, interpolation=InterpolationMode.BICUBIC),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.228, 0.224, 0.225]),
+])
+
 # 加载ImageNet验证集
 val_dataset = ImageFolder(root=imagenet_val_dir, transform=transform)
 val_loader = DataLoader(val_dataset, batch_size=256, shuffle=False, num_workers=4)
