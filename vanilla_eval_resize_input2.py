@@ -103,8 +103,10 @@ class ClassificationEvaluator(pl.LightningModule):
         acc = self.acc(pred, y)
 
         # Log
-        self.log(f"test_loss", loss, sync_dist=True,on_epoch=True)
-        self.log(f"test_acc", acc, sync_dist=True,on_epoch=True)
+        # self.log(f"test_loss", loss, sync_dist=True,on_epoch=True)
+        # self.log(f"test_acc", acc, sync_dist=True,on_epoch=True)
+        # log the outputs!
+        self.log_dict({'test_loss': loss, 'test_acc': acc})
         # self.log(f"test_loss", loss)
         # self.log(f"test_acc", acc)
 
