@@ -47,11 +47,11 @@ def main_worker(gpu, ngpus_per_node, args):
 
 def main():
     ngpus_per_node = torch.cuda.device_count()
-
     args = type('', (), {})()  # 创建一个空对象用于存储参数
     args.batch_size = 256
     args.workers = 4
     args.imagenet_val_dir = '/mnt/mmtech01/dataset/lzy/ILSVRC2012/val'
+    model = timm.create_model('vit_base_patch16_224.augreg_in21k_ft_in1k', pretrained=True)
     data_config = timm.data.resolve_model_data_config(model)
     args.transform = timm.data.create_transform(**data_config, is_training=False)
 
