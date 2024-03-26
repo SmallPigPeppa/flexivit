@@ -77,8 +77,8 @@ class ClassificationEvaluator(pl.LightningModule):
             img_size=self.image_size,
             patch_size=self.patch_size,
             num_classes=self.num_classes,
-        )
-        self.net.load_state_dict(state_dict, strict=True).to(self.device)
+        ).to(self.device)
+        self.net.load_state_dict(state_dict, strict=True)
 
         # Define metrics
         self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
