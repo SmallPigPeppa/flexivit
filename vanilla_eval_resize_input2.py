@@ -4,7 +4,7 @@ import pandas as pd
 import pytorch_lightning as pl
 import timm.models
 # from pytorch_lightning.cli import LightningArgumentParser
-from pytorch_lightning.pytorch.cli import LightningArgumentParser
+from pytorch_lightning.utilities.cli import LightningArgumentParser
 from timm import create_model
 from torch.nn import CrossEntropyLoss
 from torchmetrics.classification.accuracy import Accuracy
