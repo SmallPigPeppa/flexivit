@@ -4,7 +4,6 @@ import pandas as pd
 import pytorch_lightning as pl
 import timm.models
 from pytorch_lightning.cli import LightningArgumentParser
-# from pytorch_lightning.utilities.cli import LightningArgumentParser
 from timm import create_model
 from torch.nn import CrossEntropyLoss
 from torchmetrics.classification.accuracy import Accuracy
@@ -82,7 +81,6 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Define metrics
         self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
-        # self.acc = Accuracy(num_classes=self.num_classes, top_k=1)
 
         # Define loss
         self.loss_fn = CrossEntropyLoss()
@@ -95,44 +93,16 @@ class ClassificationEvaluator(pl.LightningModule):
         x = F.interpolate(x, size=self.image_size, mode='bilinear')
 
         # Pass through network
-        # pred = self(x)
-        pred = self(x).softmax(dim=1)
+        pred = self(x)
         loss = self.loss_fn(pred, y)
 
         # Get accuracy
         acc = self.acc(pred, y)
 
         # Log
-        # self.log(f"test_loss", loss, sync_dist=True,on_epoch=True)
-        # self.log(f"test_acc", acc, sync_dist=True,on_epoch=True)
-        # log the outputs!
         self.log_dict({'test_loss': loss, 'test_acc': acc}, sync_dist=True, on_epoch=True)
-        # self.log(f"test_loss", loss)
-        # self.log(f"test_acc", acc)
 
         return loss
-
-    def test_epoch_end_old(self, _):
-        if self.results_path:
-            acc = self.acc.compute().detach().cpu().item()
-            results = pd.DataFrame(
-                {
-                    "model": [self.weights],
-                    "acc": [round(acc, 4)],
-                    "patch_size": [self.patch_size],
-                    "image_size": [self.image_size],
-                    "resize_type": [self.resize_type],
-                }
-            )
-
-            if not os.path.exists(os.path.dirname(self.results_path)):
-                os.makedirs(os.path.dirname(self.results_path))
-
-            results.to_csv(
-                self.results_path,
-                mode="a",
-                header=not os.path.exists(self.results_path),
-            )
 
     def test_epoch_end(self, outputs):
         if self.results_path:
@@ -171,9 +141,7 @@ if __name__ == "__main__":
 
     # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
-    # trainer = pl.Trainer.from_argparse_args(args, devices=1, num_nodes=1)
-    # trainer = pl.Trainer.from_argparse_args(args)
-    trainer = pl.Trainer.from_argparse_args(args, accelerator="gpu", strategy="ddp")
+    trainer = pl.Trainer.from_argparse_args(args)
     dm = DataModule(**args["data"])
 
     for image_size, patch_size in [(224, 16)]:
@@ -183,7 +151,7 @@ if __name__ == "__main__":
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
-        net = timm.create_model('vit_base_patch16_224.augreg_in21k_ft_in1k', pretrained=True)
+        # net = timm.create_model('vit_base_patch16_224.augreg_in21k_ft_in1k', pretrained=True)
 
         from torchvision.datasets import ImageFolder
         from torch.utils.data import DataLoader
@@ -199,25 +167,5 @@ if __name__ == "__main__":
         # vit_base_patch16_224.augreg_in21k_ft_in1k
         # model.eval()
         # model = model.eval()
-        model.net = net
+        # model.net = net
         trainer.test(model, dataloaders=val_loader)
-        # # 准确率计算
-        # correct_top1 = 0
-        # correct_top5 = 0
-        # total = 0
-        # model.eval()
-        # model.cuda()  # 使用GPU
-        #
-        # with torch.no_grad():
-        #     for images, labels in tqdm(val_loader, desc="Evaluating"):
-        #         images, labels = images.cuda(), labels.cuda()
-        #         outputs = model(images)
-        #         _, predicted_top5 = outputs.topk(5, 1, True, True)
-        #         predicted_top1 = predicted_top5[:, :1]
-        #
-        #         total += labels.size(0)
-        #         correct_top1 += (predicted_top1 == labels.view(-1, 1)).sum().item()
-        #         correct_top5 += (predicted_top5 == labels.view(-1, 1)).any(dim=1).sum().item()
-        #
-        # print(f'Top-1 Accuracy: {100 * correct_top1 / total:.2f}%')
-        # print(f'Top-5 Accuracy: {100 * correct_top5 / total:.2f}%')
