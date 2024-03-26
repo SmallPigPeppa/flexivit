@@ -156,10 +156,10 @@ class ClassificationEvaluator(pl.LightningModule):
 if __name__ == "__main__":
     parser = LightningArgumentParser()
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
-    parser.add_lightning_class_args(DataModule, "data")
+    # parser.add_lightning_class_args(DataModule, "data")
     parser.add_lightning_class_args(ClassificationEvaluator, "model")
-    parser.link_arguments("data.num_classes", "model.num_classes")
-    parser.link_arguments("data.size", "model.image_size")
+    # parser.link_arguments("data.num_classes", "model.num_classes")
+    # parser.link_arguments("data.size", "model.image_size")
     # parser.link_arguments("max_epochs", "model.max_epochs")
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     trainer = pl.Trainer.from_argparse_args(args)
-    dm = DataModule(**args["data"])
+    # dm = DataModule(**args["data"])
 
     for image_size, patch_size in [(32, 16), (48, 16), (64, 16), (80, 16), (96, 16), (112, 16), (128, 16), (144, 16),
                                    (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
