@@ -17,7 +17,6 @@ from pytorch_lightning.loggers import WandbLogger
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 
 
-
 class ClassificationEvaluator(pl.LightningModule):
     def __init__(
             self,
@@ -90,7 +89,6 @@ class ClassificationEvaluator(pl.LightningModule):
         # Define loss
         self.loss_fn = CrossEntropyLoss()
 
-
     def forward(self, x):
         return self.net(x)
 
@@ -155,16 +153,17 @@ class ClassificationEvaluator(pl.LightningModule):
 
                 # 保存更新后的结果
                 results_df.to_csv(self.results_path)
+
     def configure_optimizers(self):
-        self.lr=0.1
-        self.wd=5e-4
+        self.lr = 0.1
+        self.wd = 5e-4
+        self.max_epochs = self.trainer.max_epochs
 
         optimizer = torch.optim.SGD(
             self.net.head.parameters(),
             lr=self.lr,
             weight_decay=self.wd,
             momentum=0.9)
-
 
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
