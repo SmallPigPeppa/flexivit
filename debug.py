@@ -9,7 +9,8 @@ from tqdm import tqdm
 imagenet_val_dir = '/mnt/mmtech01/dataset/lzy/ILSVRC2012/val'  # 需要替换为实际路径
 
 # 创建模型
-model = timm.create_model('vit_base_patch16_224', pretrained=True)
+# model = timm.create_model('vit_base_patch16_224', pretrained=True)
+model = timm.create_model('vit_base_patch16_224.augreg_in21k_ft_in1k', pretrained=True)
 # vit_base_patch16_224.augreg_in21k_ft_in1k
 model.eval()
 model.cuda()  # 使用GPU
