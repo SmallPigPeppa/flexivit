@@ -200,6 +200,6 @@ if __name__ == "__main__":
                                 shuffle=False, pin_memory=True)
         train_transform = timm.data.create_transform(**data_config, is_training=True)
         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
-        train_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
-                                  shuffle=False, pin_memory=True)
+        train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
+                                  shuffle=True, pin_memory=True)
         trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
