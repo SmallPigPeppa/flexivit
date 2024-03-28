@@ -231,7 +231,23 @@ class ClassificationEvaluator(pl.LightningModule):
             dynamic_img_pad=self.dynamic_img_pad,
             **embed_args,
         )
-        self.patch_embed.proj.weight = self.net.patch_embed.proj.weight
+        # self.patch_embed.proj.weight = self.net.patch_embed.proj.weight
+        # self.net.patch_embed = nn.Identity()
+        # 复制权重
+        # copied_weights = self.net.patch_embed.proj.weight.clone()
+        # # 设置新模块的权重
+        # self.patch_embed.proj.weight = nn.Parameter(copied_weights)
+        # 将原模块设置为Identity
+
+        import copy
+        if hasattr(self.net.patch_embed, 'proj'):
+            self.patch_embed.proj = copy.deepcopy(self.net.patch_embed.proj)
+
+        if hasattr(self.net.patch_embed, 'norm') and not isinstance(self.net.patch_embed.norm, nn.Identity):
+            self.new_patch_embed.norm = copy.deepcopy(self.net.patch_embed.norm)
+
+        # 用新的 patch_embed 替换原有的 patch_embed
+        # self.net.patch_embed = new_patch_embed
         self.net.patch_embed = nn.Identity()
 
 
