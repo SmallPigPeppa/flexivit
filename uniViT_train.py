@@ -52,42 +52,43 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Load original weights
         print(f"Loading weights {self.weights}")
-        orig_net = create_model(self.weights, pretrained=True)
-        state_dict = orig_net.state_dict()
-        self.origin_state_dict = state_dict
+        # orig_net = create_model(self.weights, pretrained=True)
+        self.net = create_model(self.weights, pretrained=True)
+        # state_dict = orig_net.state_dict()
+        # self.origin_state_dict = state_dict
+        #
+        # # Adjust patch embedding
+        # if self.resize_type == "pi":
+        #     state_dict["patch_embed.proj.weight"] = pi_resize_patch_embed(
+        #         state_dict["patch_embed.proj.weight"],
+        #         (self.patch_size, self.patch_size),
+        #     )
+        # elif self.resize_type == "interpolate":
+        #     state_dict["patch_embed.proj.weight"] = interpolate_resize_patch_embed(
+        #         state_dict["patch_embed.proj.weight"],
+        #         (self.patch_size, self.patch_size),
+        #     )
+        # else:
+        #     raise ValueError(
+        #         f"{self.resize_type} is not a valid value for --model.resize_type. Should be one of ['flexi', 'interpolate']"
+        #     )
 
-        # Adjust patch embedding
-        if self.resize_type == "pi":
-            state_dict["patch_embed.proj.weight"] = pi_resize_patch_embed(
-                state_dict["patch_embed.proj.weight"],
-                (self.patch_size, self.patch_size),
-            )
-        elif self.resize_type == "interpolate":
-            state_dict["patch_embed.proj.weight"] = interpolate_resize_patch_embed(
-                state_dict["patch_embed.proj.weight"],
-                (self.patch_size, self.patch_size),
-            )
-        else:
-            raise ValueError(
-                f"{self.resize_type} is not a valid value for --model.resize_type. Should be one of ['flexi', 'interpolate']"
-            )
-
-        # Adjust position embedding
-        if "pos_embed" in state_dict.keys():
-            grid_size = self.image_size // self.patch_size
-            state_dict["pos_embed"] = resize_abs_pos_embed(
-                state_dict["pos_embed"], new_size=(grid_size, grid_size)
-            )
-
-        # Load adjusted weights into model with target patch and image sizes
-        model_fn = getattr(timm.models, orig_net.default_cfg["architecture"])
-        self.net = model_fn(
-            img_size=self.image_size,
-            patch_size=self.patch_size,
-            num_classes=self.num_classes,
-            dynamic_img_size=True
-        ).to(self.device)
-        self.net.load_state_dict(state_dict, strict=True)
+        # # Adjust position embedding
+        # if "pos_embed" in state_dict.keys():
+        #     grid_size = self.image_size // self.patch_size
+        #     state_dict["pos_embed"] = resize_abs_pos_embed(
+        #         state_dict["pos_embed"], new_size=(grid_size, grid_size)
+        #     )
+        #
+        # # Load adjusted weights into model with target patch and image sizes
+        # model_fn = getattr(timm.models, orig_net.default_cfg["architecture"])
+        # self.net = model_fn(
+        #     img_size=self.image_size,
+        #     patch_size=self.patch_size,
+        #     num_classes=self.num_classes,
+        #     dynamic_img_size=True
+        # ).to(self.device)
+        # self.net.load_state_dict(state_dict, strict=True)
 
         # self.net.dynamic_img_size = True
 
@@ -98,7 +99,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.loss_fn = CrossEntropyLoss()
 
         # modified
-        self.modified()
+        self.modified(new_image_size=self.image_size, new_patch_size=self.patch_size)
 
     # def forward(self, x):
     #     return self.net(x)
@@ -214,7 +215,7 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.forward_head(x)
         return x
 
-    def modified(self):
+    def modified(self, new_image_size=224, new_patch_size=16):
         self.embed_args = {}
         self.in_chans = 3
         self.embed_dim = self.net.num_features
@@ -237,7 +238,7 @@ class ClassificationEvaluator(pl.LightningModule):
         #     self.patch_embed.proj.weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
         # if self.net.patch_embed.proj.bias is not None:
         #     self.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
-        self.patch_embed = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
+        self.patch_embed = self.get_new_patch_embed(new_image_size=new_image_size, new_patch_size=new_patch_size)
 
         self.net.patch_embed = nn.Identity()
 
@@ -268,6 +269,36 @@ class ClassificationEvaluator(pl.LightningModule):
         return new_patch_embed
 
 
+# if __name__ == "__main__":
+#     parser = LightningArgumentParser()
+#     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
+#     parser.add_lightning_class_args(ClassificationEvaluator, "model")
+#     parser.add_argument("--batch_size", type=int, default=256)
+#     parser.add_argument("--works", type=int, default=4)
+#     parser.add_argument("--root", type=str, default='./data')
+#     args = parser.parse_args()
+#     # args["logger"] = False  # Disable saving logging artifacts
+#     # wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
+#     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
+#     trainer = pl.Trainer.from_argparse_args(args)
+#     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
+#     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
+#     for image_size, patch_size in [(224, 16)]:
+#         args["model"].image_size = image_size
+#         args["model"].patch_size = patch_size
+#         model = ClassificationEvaluator(**args["model"])
+#         data_config = timm.data.resolve_model_data_config(model.net)
+#         val_transform = timm.data.create_transform(**data_config, is_training=False)
+#         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
+#         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
+#                                 shuffle=False, pin_memory=True)
+#         train_transform = timm.data.create_transform(**data_config, is_training=True)
+#         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
+#         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
+#                                   shuffle=True, pin_memory=True)
+#         # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+#         trainer.test(model, dataloaders=val_loader)
+
 if __name__ == "__main__":
     parser = LightningArgumentParser()
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
@@ -280,9 +311,9 @@ if __name__ == "__main__":
     # wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     trainer = pl.Trainer.from_argparse_args(args)
-    # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
-    #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
-    for image_size, patch_size in [(224, 16)]:
+    for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
+                                   (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
+        # for image_size, patch_size in [(224, 16)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
