@@ -231,23 +231,25 @@ class ClassificationEvaluator(pl.LightningModule):
             dynamic_img_pad=self.dynamic_img_pad,
             **embed_args,
         )
-        # self.patch_embed.proj.weight = self.net.patch_embed.proj.weight
-        # self.net.patch_embed = nn.Identity()
-        # 复制权重
-        # copied_weights = self.net.patch_embed.proj.weight.clone()
-        # # 设置新模块的权重
-        # self.patch_embed.proj.weight = nn.Parameter(copied_weights)
-        # 将原模块设置为Identity
 
-        import copy
-        # if hasattr(self.net.patch_embed, 'proj'):
-        self.patch_embed.proj = copy.deepcopy(self.net.patch_embed.proj)
+        # import copy
+        # self.patch_embed.proj = copy.deepcopy(self.net.patch_embed.proj)
 
-        # if hasattr(self.net.patch_embed, 'norm') and not isinstance(self.net.patch_embed.norm, nn.Identity):
-        #     self.patch_embed.norm = copy.deepcopy(self.net.patch_embed.norm)
+        # 假设 new_patch_embed 是新创建并需要更新权重的 PatchEmbed 实例
+        # 复制 Conv2d 层的权重和偏置
+        if hasattr(self.net.patch_embed.proj, 'weight'):
+            self.patch_embed.proj.weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
+        if self.net.patch_embed.proj.bias is not None:
+            self.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
 
-        # 用新的 patch_embed 替换原有的 patch_embed
-        # self.net.patch_embed = new_patch_embed
+        # # 对于 norm 层（如果它包含可训练的参数并且你希望复制它们）
+        # # 你需要检查 norm 层的类型以及它是否包含 weight 和 bias 属性
+        # if hasattr(new_patch_embed, 'norm') and not isinstance(new_patch_embed.norm, nn.Identity):
+        #     if hasattr(self.net.patch_embed.norm, 'weight') and self.net.patch_embed.norm.weight is not None:
+        #         new_patch_embed.norm.weight = nn.Parameter(self.net.patch_embed.norm.weight.clone())
+        #     if hasattr(self.net.patch_embed.norm, 'bias') and self.net.patch_embed.norm.bias is not None:
+        #         new_patch_embed.norm.bias = nn.Parameter(self.net.patch_embed.norm.bias.clone())
+
         self.net.patch_embed = nn.Identity()
 
 
