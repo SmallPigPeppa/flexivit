@@ -273,7 +273,7 @@ class ClassificationEvaluator(pl.LightningModule):
             # )
             new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
         if self.net.patch_embed.proj.bias is not None:
-            new_patch_embed.proj.bias = nn.Parameter(self.origin_state_dict["patch_embed.proj.bias"],
+            new_patch_embed.proj.bias = nn.Parameter(torch.tensor(self.origin_state_dict["patch_embed.proj.bias"]),
                                                      requires_grad=True)
 
         return new_patch_embed
