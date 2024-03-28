@@ -17,6 +17,9 @@ from pytorch_lightning.loggers import WandbLogger
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from timm.models._manipulate import checkpoint_seq
 
+from timm.layers import PatchEmbed
+import torch.nn as nn
+
 
 class ClassificationEvaluator(pl.LightningModule):
     def __init__(
@@ -91,6 +94,9 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Define loss
         self.loss_fn = CrossEntropyLoss()
+
+        # modified
+        self.modified()
 
     # def forward(self, x):
     #     return self.net(x)
@@ -201,9 +207,30 @@ class ClassificationEvaluator(pl.LightningModule):
         return x if pre_logits else self.net.head(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.patch_embed(x)
         x = self.forward_features(x)
         x = self.forward_head(x)
         return x
+
+    def modified(self):
+        self.net.patch_embed = nn.Identity()
+        embed_args = {}
+        self.in_chans = 3
+        self.embed_dim = self.net.num_features
+        self.pre_norm = False
+        self.dynamic_img_pad = False
+        if self.net.dynamic_img_size:
+            # flatten deferred until after pos embed
+            embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
+        self.patch_embed = PatchEmbed(
+            img_size=self.img_size,
+            patch_size=self.patch_size,
+            in_chans=self.in_chans,
+            embed_dim=self.embed_dim,
+            bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
+            dynamic_img_pad=self.dynamic_img_pad,
+            **embed_args,
+        )
 
 
 if __name__ == "__main__":
