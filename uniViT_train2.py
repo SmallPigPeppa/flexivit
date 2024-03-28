@@ -271,11 +271,12 @@ class ClassificationEvaluator(pl.LightningModule):
             new_weight = pi_resize_patch_embed(
                 patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
             )
-            new_patch_embed.proj.weight = nn.Parameter(new_weight,requires_grad=True)
+            new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
         if self.net.patch_embed.proj.bias is not None:
             # new_patch_embed.proj.bias = nn.Parameter(torch.tensor(self.origin_state_dict["patch_embed.proj.bias"]),
             #                                          requires_grad=True)
-            new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach())
+            new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
+                                                     requires_grad=True)
 
         return new_patch_embed
 
@@ -318,9 +319,9 @@ if __name__ == "__main__":
     parser.add_argument("--works", type=int, default=4)
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
-    # args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='ft-all-param-uniViT', project='uniViT', entity='pigpeppa', offline=False)
-    trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
+    args["logger"] = False  # Disable saving logging artifacts
+    # wandb_logger = WandbLogger(name='ft-all-param-uniViT', project='uniViT', entity='pigpeppa', offline=False)
+    # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
