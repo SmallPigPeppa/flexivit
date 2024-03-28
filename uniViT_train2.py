@@ -219,9 +219,8 @@ class ClassificationEvaluator(pl.LightningModule):
         return x if pre_logits else self.net.head(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        with torch.no_grad():
-            x = self.forward_features(x)
-            x = self.forward_head(x)
+        x = self.forward_features(x)
+        x = self.forward_head(x)
         return x
 
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -250,7 +249,6 @@ class ClassificationEvaluator(pl.LightningModule):
         self.patch_embed_224 = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
         self.patch_embed = self.get_new_patch_embed(new_image_size=new_image_size, new_patch_size=new_patch_size)
         import pdb;pdb.set_trace()
-        print( self.patch_embed_224.parameters())
 
 
         self.net.patch_embed = nn.Identity()
