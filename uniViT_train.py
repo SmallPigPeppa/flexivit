@@ -54,6 +54,7 @@ class ClassificationEvaluator(pl.LightningModule):
         print(f"Loading weights {self.weights}")
         orig_net = create_model(self.weights, pretrained=True)
         state_dict = orig_net.state_dict()
+        self.origin_state_dict = state_dict
 
         # Adjust patch embedding
         if self.resize_type == "pi":
@@ -87,6 +88,7 @@ class ClassificationEvaluator(pl.LightningModule):
             dynamic_img_size=True
         ).to(self.device)
         self.net.load_state_dict(state_dict, strict=True)
+
         # self.net.dynamic_img_size = True
 
         # Define metrics
@@ -251,10 +253,10 @@ class ClassificationEvaluator(pl.LightningModule):
             **self.embed_args,
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
-            origin_weight = self.net.patch_embed.proj.weight.clone()
-            print(origin_weight)
+            # origin_weight = self.net.patch_embed.proj.weight.clone()
+            # print(origin_weight)
             new_weight = pi_resize_patch_embed(
-                patch_embed=origin_weight, new_patch_size=new_patch_size
+                patch_embed=self.state_dict["patch_embed.proj.weight"], new_patch_size=new_patch_size
             )
             new_patch_embed.proj.weight = nn.Parameter(new_weight)
         if self.net.patch_embed.proj.bias is not None:
