@@ -223,7 +223,7 @@ class ClassificationEvaluator(pl.LightningModule):
             # flatten deferred until after pos embed
             embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
         self.patch_embed = PatchEmbed(
-            img_size=self.img_size,
+            img_size=self.image_size,
             patch_size=self.patch_size,
             in_chans=self.in_chans,
             embed_dim=self.embed_dim,
