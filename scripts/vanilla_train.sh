@@ -1,10 +1,10 @@
-python uniViT_train2.py \
-  --max_epochs 20 \
+python vanilla_train.py \
+  --max_epochs 10 \
   --precision 16 \
   --accelerator gpu \
   --devices 8 \
   --works 4 \
-  --batch_size 128 \
+  --batch_size 256 \
   --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --model.resize_type pi \
   --model.weights vit_base_patch16_224.augreg2_in21k_ft_in1k \
@@ -12,6 +12,3 @@ python uniViT_train2.py \
   --model.patch_size 16 \
   --model.image_size 224 \
   --model.results_path ./resize_weight.csv
-
-
-

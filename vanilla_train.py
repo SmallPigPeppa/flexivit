@@ -159,11 +159,18 @@ class ClassificationEvaluator(pl.LightningModule):
         self.wd = 5e-4
         self.max_epochs = self.trainer.max_epochs
 
+        # optimizer = torch.optim.SGD(
+        #     self.net.head.parameters(),
+        #     lr=self.lr,
+        #     weight_decay=self.wd,
+        #     momentum=0.9)
+
         optimizer = torch.optim.SGD(
-            self.net.head.parameters(),
+            self.net.parameters(),
             lr=self.lr,
             weight_decay=self.wd,
             momentum=0.9)
+
 
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
