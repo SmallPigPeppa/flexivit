@@ -213,7 +213,6 @@ class ClassificationEvaluator(pl.LightningModule):
         return x
 
     def modified(self):
-
         embed_args = {}
         self.in_chans = 3
         self.embed_dim = self.net.num_features
@@ -221,36 +220,45 @@ class ClassificationEvaluator(pl.LightningModule):
         self.dynamic_img_pad = False
         if self.net.dynamic_img_size:
             # flatten deferred until after pos embed
-            embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
-        self.patch_embed = PatchEmbed(
-            img_size=self.image_size,
-            patch_size=self.patch_size,
+            self.embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
+        # self.patch_embed = PatchEmbed(
+        #     img_size=self.image_size,
+        #     patch_size=self.patch_size,
+        #     in_chans=self.in_chans,
+        #     embed_dim=self.embed_dim,
+        #     bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
+        #     dynamic_img_pad=self.dynamic_img_pad,
+        #     **self.embed_args,
+        # )
+        #
+        # if hasattr(self.net.patch_embed.proj, 'weight'):
+        #     self.patch_embed.proj.weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
+        # if self.net.patch_embed.proj.bias is not None:
+        #     self.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
+        self.patch_embed = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
+
+        self.net.patch_embed = nn.Identity()
+
+    def get_new_patch_embed(self, new_image_size, new_patch_size):
+        # new_patch_size = 4
+        new_patch_embed = PatchEmbed(
+            img_size=new_image_size,
+            patch_size=new_patch_size,
             in_chans=self.in_chans,
             embed_dim=self.embed_dim,
             bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
             dynamic_img_pad=self.dynamic_img_pad,
-            **embed_args,
+            **self.embed_args,
         )
-
-        # import copy
-        # self.patch_embed.proj = copy.deepcopy(self.net.patch_embed.proj)
-
-        # 假设 new_patch_embed 是新创建并需要更新权重的 PatchEmbed 实例
-        # 复制 Conv2d 层的权重和偏置
         if hasattr(self.net.patch_embed.proj, 'weight'):
-            self.patch_embed.proj.weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
+            origin_weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
+            new_patch_embed.proj.weight = pi_resize_patch_embed(
+                patch_embed=origin_weight, new_patch_size=new_patch_size
+            )
         if self.net.patch_embed.proj.bias is not None:
-            self.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
+            new_patch_embed.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
 
-        # # 对于 norm 层（如果它包含可训练的参数并且你希望复制它们）
-        # # 你需要检查 norm 层的类型以及它是否包含 weight 和 bias 属性
-        # if hasattr(new_patch_embed, 'norm') and not isinstance(new_patch_embed.norm, nn.Identity):
-        #     if hasattr(self.net.patch_embed.norm, 'weight') and self.net.patch_embed.norm.weight is not None:
-        #         new_patch_embed.norm.weight = nn.Parameter(self.net.patch_embed.norm.weight.clone())
-        #     if hasattr(self.net.patch_embed.norm, 'bias') and self.net.patch_embed.norm.bias is not None:
-        #         new_patch_embed.norm.bias = nn.Parameter(self.net.patch_embed.norm.bias.clone())
-
-        self.net.patch_embed = nn.Identity()
+        return new_patch_embed
 
 
 if __name__ == "__main__":
