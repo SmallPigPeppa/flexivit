@@ -180,8 +180,13 @@ class ClassificationEvaluator(pl.LightningModule):
                              list(self.patch_embed_112.parameters()) + \
                              list(self.patch_embed_224.parameters())
 
+        # optimizer = torch.optim.SGD(
+        #     params_to_optimize,
+        #     lr=self.lr,
+        #     weight_decay=self.wd,
+        #     momentum=0.9)
         optimizer = torch.optim.SGD(
-            params_to_optimize,
+            self.parameters(),
             lr=self.lr,
             weight_decay=self.wd,
             momentum=0.9)
