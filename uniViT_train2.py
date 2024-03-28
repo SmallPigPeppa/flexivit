@@ -219,9 +219,11 @@ class ClassificationEvaluator(pl.LightningModule):
         return x if pre_logits else self.net.head(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.forward_features(x)
-        x = self.forward_head(x)
+        with torch.no_grad():
+            x = self.forward_features(x)
+            x = self.forward_head(x)
         return x
+
 
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         x_0 = F.interpolate(x, size=56, mode='bilinear')
