@@ -221,44 +221,44 @@ class ClassificationEvaluator(pl.LightningModule):
         if self.net.dynamic_img_size:
             # flatten deferred until after pos embed
             self.embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
-        # self.patch_embed = PatchEmbed(
-        #     img_size=self.image_size,
-        #     patch_size=self.patch_size,
-        #     in_chans=self.in_chans,
-        #     embed_dim=self.embed_dim,
-        #     bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
-        #     dynamic_img_pad=self.dynamic_img_pad,
-        #     **self.embed_args,
-        # )
-        #
-        # if hasattr(self.net.patch_embed.proj, 'weight'):
-        #     self.patch_embed.proj.weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
-        # if self.net.patch_embed.proj.bias is not None:
-        #     self.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
-        self.patch_embed = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
-
-        self.net.patch_embed = nn.Identity()
-
-    def get_new_patch_embed(self, new_image_size, new_patch_size):
-        # new_patch_size = 4
-        new_patch_embed = PatchEmbed(
-            img_size=new_image_size,
-            patch_size=new_patch_size,
+        self.patch_embed = PatchEmbed(
+            img_size=self.image_size,
+            patch_size=self.patch_size,
             in_chans=self.in_chans,
             embed_dim=self.embed_dim,
             bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
             dynamic_img_pad=self.dynamic_img_pad,
             **self.embed_args,
         )
-        if hasattr(self.net.patch_embed.proj, 'weight'):
-            origin_weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
-            new_patch_embed.proj.weight = pi_resize_patch_embed(
-                patch_embed=origin_weight, new_patch_size=new_patch_size
-            )
-        if self.net.patch_embed.proj.bias is not None:
-            new_patch_embed.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
 
-        return new_patch_embed
+        if hasattr(self.net.patch_embed.proj, 'weight'):
+            self.patch_embed.proj.weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
+        if self.net.patch_embed.proj.bias is not None:
+            self.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
+        # self.patch_embed = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
+
+        self.net.patch_embed = nn.Identity()
+
+    # def get_new_patch_embed(self, new_image_size, new_patch_size):
+    #     # new_patch_size = 4
+    #     new_patch_embed = PatchEmbed(
+    #         img_size=new_image_size,
+    #         patch_size=new_patch_size,
+    #         in_chans=self.in_chans,
+    #         embed_dim=self.embed_dim,
+    #         bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
+    #         dynamic_img_pad=self.dynamic_img_pad,
+    #         **self.embed_args,
+    #     )
+    #     if hasattr(self.net.patch_embed.proj, 'weight'):
+    #         origin_weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
+    #         new_patch_embed.proj.weight = pi_resize_patch_embed(
+    #             patch_embed=origin_weight, new_patch_size=new_patch_size
+    #         )
+    #     if self.net.patch_embed.proj.bias is not None:
+    #         new_patch_embed.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
+    #
+    #     return new_patch_embed
 
 
 if __name__ == "__main__":
