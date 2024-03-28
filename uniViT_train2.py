@@ -321,9 +321,9 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    # wandb_logger = WandbLogger(name='ft-all-param-uniViT', project='uniViT', entity='pigpeppa', offline=False)
-    # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
-    trainer = pl.Trainer.from_argparse_args(args)
+    wandb_logger = WandbLogger(name='ft-all-param-uniViT', project='uniViT', entity='pigpeppa', offline=False)
+    trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
+    # trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
     for image_size, patch_size in [(224, 16)]:
