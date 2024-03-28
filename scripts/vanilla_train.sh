@@ -1,5 +1,5 @@
 python uniViT_train2.py \
-  --max_epochs 10 \
+  --max_epochs 20 \
   --precision 16 \
   --accelerator gpu \
   --devices 8 \

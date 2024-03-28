@@ -176,8 +176,12 @@ class ClassificationEvaluator(pl.LightningModule):
         self.wd = 5e-4
         self.max_epochs = self.trainer.max_epochs
 
+        params_to_optimize = list(self.patch_embed_56.parameters()) + \
+                             list(self.patch_embed_112.parameters()) + \
+                             list(self.patch_embed_224.parameters())
+
         optimizer = torch.optim.SGD(
-            self.net.head.parameters(),
+            params_to_optimize,
             lr=self.lr,
             weight_decay=self.wd,
             momentum=0.9)
@@ -308,7 +312,7 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     # args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
+    wandb_logger = WandbLogger(name='ft-all-param-uniViT', project='uniViT', entity='pigpeppa', offline=False)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
