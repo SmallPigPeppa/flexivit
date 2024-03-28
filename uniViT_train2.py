@@ -56,31 +56,6 @@ class ClassificationEvaluator(pl.LightningModule):
         # self.net = create_model(self.weights, pretrained=True)
         state_dict = orig_net.state_dict()
         self.origin_state_dict = state_dict
-        #
-        # # Adjust patch embedding
-        # if self.resize_type == "pi":
-        #     state_dict["patch_embed.proj.weight"] = pi_resize_patch_embed(
-        #         state_dict["patch_embed.proj.weight"],
-        #         (self.patch_size, self.patch_size),
-        #     )
-        # elif self.resize_type == "interpolate":
-        #     state_dict["patch_embed.proj.weight"] = interpolate_resize_patch_embed(
-        #         state_dict["patch_embed.proj.weight"],
-        #         (self.patch_size, self.patch_size),
-        #     )
-        # else:
-        #     raise ValueError(
-        #         f"{self.resize_type} is not a valid value for --model.resize_type. Should be one of ['flexi', 'interpolate']"
-        #     )
-        #
-        # # Adjust position embedding
-        # if "pos_embed" in state_dict.keys():
-        #     grid_size = self.image_size // self.patch_size
-        #     state_dict["pos_embed"] = resize_abs_pos_embed(
-        #         state_dict["pos_embed"], new_size=(grid_size, grid_size)
-        #     )
-
-        # Load adjusted weights into model with target patch and image sizes
         model_fn = getattr(timm.models, orig_net.default_cfg["architecture"])
         self.net = model_fn(
             img_size=224,
@@ -102,7 +77,7 @@ class ClassificationEvaluator(pl.LightningModule):
     # def forward(self, x):
     #     return self.net(x)
 
-    def training_step(self, batch, batch_idx):
+    def training_step_old(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
         loss = self.loss_fn(logits, y)
@@ -114,14 +89,46 @@ class ClassificationEvaluator(pl.LightningModule):
         self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
         return out_dict
 
-    def validation_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx):
         x, y = batch
-        logits = self(x)
-        loss = self.loss_fn(logits, y)
-        acc = self.acc(logits, y)
+        logits_0, logits_1, logits_2 = self.ms_forward(x)
+        loss_0 = self.loss_fn(logits_0, y)
+        acc_0 = self.acc(logits_0, y)
+        loss_1 = self.loss_fn(logits_1, y)
+        acc_1 = self.acc(logits_1, y)
+        loss_2 = self.loss_fn(logits_2, y)
+        acc_2 = self.acc(logits_2, y)
+
+        loss = loss_0 + loss_1 + loss_2
 
         # out dict
-        out_dict = {'val_loss': loss, 'val_acc': acc}
+        # out_dict = {'loss': loss, 'train_loss': loss, 'train_acc': acc}
+        out_dict = {'loss': loss,
+                    'train_loss_0': loss_0, 'train_loss_1': loss_1, 'train_loss_2': loss_2,
+                    'train_acc_0': acc_0, 'train_acc_1': acc_1, 'train_acc_2': acc_2
+                    }
+        # Log
+        self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
+        return out_dict
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        logits_0, logits_1, logits_2 = self.ms_forward(x)
+        loss_0 = self.loss_fn(logits_0, y)
+        acc_0 = self.acc(logits_0, y)
+        loss_1 = self.loss_fn(logits_1, y)
+        acc_1 = self.acc(logits_1, y)
+        loss_2 = self.loss_fn(logits_2, y)
+        acc_2 = self.acc(logits_2, y)
+
+        loss = loss_0 + loss_1 + loss_2
+
+        # out dict
+        # out_dict = {'loss': loss, 'train_loss': loss, 'train_acc': acc}
+        out_dict = {'loss': loss,
+                    'val_loss_0': loss_0, 'val_loss_1': loss_1, 'val_loss_2': loss_2,
+                    'val_acc_0': acc_0, 'val_acc_1': acc_1, 'val_acc_2': acc_2
+                    }
         # Log
         self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
         return out_dict
@@ -208,10 +215,21 @@ class ClassificationEvaluator(pl.LightningModule):
         return x if pre_logits else self.net.head(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.patch_embed(x)
         x = self.forward_features(x)
         x = self.forward_head(x)
         return x
+
+    def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
+        x_0 = F.interpolate(x, size=56, mode='bilinear')
+        x_0 = self.patch_embed_56(x_0)
+
+        x_1 = F.interpolate(x, size=112, mode='bilinear')
+        x_1 = self.patch_embed_112(x_1)
+
+        x_2 = F.interpolate(x, size=224, mode='bilinear')
+        x_2 = self.patch_embed_224(x_2)
+
+        return self(x_0), self(x_1), self(x_2)
 
     def modified(self, new_image_size=224, new_patch_size=16):
         self.embed_args = {}
@@ -222,26 +240,14 @@ class ClassificationEvaluator(pl.LightningModule):
         if self.net.dynamic_img_size:
             # flatten deferred until after pos embed
             self.embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
-        # self.patch_embed = PatchEmbed(
-        #     img_size=self.image_size,
-        #     patch_size=self.patch_size,
-        #     in_chans=self.in_chans,
-        #     embed_dim=self.embed_dim,
-        #     bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
-        #     dynamic_img_pad=self.dynamic_img_pad,
-        #     **self.embed_args,
-        # )
-
-        # if hasattr(self.net.patch_embed.proj, 'weight'):
-        #     self.patch_embed.proj.weight = nn.Parameter(self.net.patch_embed.proj.weight.clone())
-        # if self.net.patch_embed.proj.bias is not None:
-        #     self.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
+        self.patch_embed_56 = self.get_new_patch_embed(new_image_size=56, new_patch_size=4)
+        self.patch_embed_112 = self.get_new_patch_embed(new_image_size=112, new_patch_size=8)
+        self.patch_embed_224 = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
         self.patch_embed = self.get_new_patch_embed(new_image_size=new_image_size, new_patch_size=new_patch_size)
 
         self.net.patch_embed = nn.Identity()
 
     def get_new_patch_embed(self, new_image_size, new_patch_size):
-        # new_patch_size = 4
         new_patch_embed = PatchEmbed(
             img_size=new_image_size,
             patch_size=new_patch_size,
@@ -253,10 +259,6 @@ class ClassificationEvaluator(pl.LightningModule):
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
             origin_weight = self.net.patch_embed.proj.weight.clone()
-            # print(origin_weight)
-            # new_weight = pi_resize_patch_embed(
-            #     patch_embed=self.state_dict["patch_embed.proj.weight"], new_patch_size=new_patch_size
-            # )
             new_weight = pi_resize_patch_embed(
                 patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
             )
@@ -306,12 +308,12 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     # args["logger"] = False  # Disable saving logging artifacts
-    # wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
-    # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
+    wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
+    trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     trainer = pl.Trainer.from_argparse_args(args)
-    for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
-                                   (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
-        # for image_size, patch_size in [(224, 16)]:
+    # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
+    #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
+    for image_size, patch_size in [(224, 16)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
@@ -324,5 +326,5 @@ if __name__ == "__main__":
         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
-        # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-        trainer.test(model, dataloaders=val_loader)
+        trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+        # trainer.test(model, dataloaders=val_loader)
