@@ -213,7 +213,7 @@ class ClassificationEvaluator(pl.LightningModule):
         return x
 
     def modified(self):
-        self.net.patch_embed = nn.Identity()
+
         embed_args = {}
         self.in_chans = 3
         self.embed_dim = self.net.num_features
@@ -231,6 +231,8 @@ class ClassificationEvaluator(pl.LightningModule):
             dynamic_img_pad=self.dynamic_img_pad,
             **embed_args,
         )
+        self.patch_embed.proj.weight = self.net.patch_embed.proj.weight
+        self.net.patch_embed = nn.Identity()
 
 
 if __name__ == "__main__":
