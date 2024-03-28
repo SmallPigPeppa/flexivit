@@ -1,4 +1,4 @@
-python uniViT_train.py \
+python uniViT_train2.py \
   --max_epochs 10 \
   --precision 16 \
   --accelerator gpu \
