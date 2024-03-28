@@ -83,6 +83,7 @@ class ClassificationEvaluator(pl.LightningModule):
             num_classes=self.num_classes,
         ).to(self.device)
         self.net.load_state_dict(state_dict, strict=True)
+        self.net.dynamic_img_size = True
 
         # Define metrics
         self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
@@ -202,6 +203,7 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.forward_features(x)
         x = self.forward_head(x)
         return x
+
 
 if __name__ == "__main__":
     parser = LightningArgumentParser()
