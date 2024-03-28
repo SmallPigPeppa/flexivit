@@ -265,7 +265,8 @@ class ClassificationEvaluator(pl.LightningModule):
         if hasattr(self.net.patch_embed.proj, 'weight'):
             # origin_weight = self.net.patch_embed.proj.weight.clone().detach()
             new_weight = pi_resize_patch_embed(
-                patch_embed=self.origin_state_dict["patch_embed.proj.weight"], new_patch_size=new_patch_size
+                patch_embed=self.origin_state_dict["patch_embed.proj.weight"],
+                new_patch_size=(new_patch_size, new_patch_size)
             )
             # new_weight = pi_resize_patch_embed(
             #     patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
