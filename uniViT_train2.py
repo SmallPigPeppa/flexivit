@@ -264,13 +264,13 @@ class ClassificationEvaluator(pl.LightningModule):
             **self.embed_args,
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
-            origin_weight = self.net.patch_embed.proj.weight.clone()
+            origin_weight = self.net.patch_embed.proj.weight.clone().detach()
             new_weight = pi_resize_patch_embed(
                 patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
             )
             new_patch_embed.proj.weight = nn.Parameter(new_weight)
         if self.net.patch_embed.proj.bias is not None:
-            new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
+            new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach())
 
         return new_patch_embed
 
