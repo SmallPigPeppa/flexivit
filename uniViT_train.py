@@ -240,11 +240,11 @@ class ClassificationEvaluator(pl.LightningModule):
         # 将原模块设置为Identity
 
         import copy
-        if hasattr(self.net.patch_embed, 'proj'):
-            self.patch_embed.proj = copy.deepcopy(self.net.patch_embed.proj)
+        # if hasattr(self.net.patch_embed, 'proj'):
+        self.patch_embed.proj = copy.deepcopy(self.net.patch_embed.proj)
 
-        if hasattr(self.net.patch_embed, 'norm') and not isinstance(self.net.patch_embed.norm, nn.Identity):
-            self.new_patch_embed.norm = copy.deepcopy(self.net.patch_embed.norm)
+        # if hasattr(self.net.patch_embed, 'norm') and not isinstance(self.net.patch_embed.norm, nn.Identity):
+        #     self.patch_embed.norm = copy.deepcopy(self.net.patch_embed.norm)
 
         # 用新的 patch_embed 替换原有的 patch_embed
         # self.net.patch_embed = new_patch_embed
