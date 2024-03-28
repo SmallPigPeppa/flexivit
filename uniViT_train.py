@@ -81,6 +81,7 @@ class ClassificationEvaluator(pl.LightningModule):
             img_size=self.image_size,
             patch_size=self.patch_size,
             num_classes=self.num_classes,
+            dynamic_img_size=True
         ).to(self.device)
         self.net.load_state_dict(state_dict, strict=True)
         # self.net.dynamic_img_size = True
