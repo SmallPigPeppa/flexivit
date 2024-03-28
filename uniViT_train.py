@@ -263,7 +263,7 @@ class ClassificationEvaluator(pl.LightningModule):
             )
             new_patch_embed.proj.weight = nn.Parameter(new_weight)
         if self.net.patch_embed.proj.bias is not None:
-            new_patch_embed.patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
+            new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone())
 
         return new_patch_embed
 
