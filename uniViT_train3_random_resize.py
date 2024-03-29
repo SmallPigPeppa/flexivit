@@ -209,7 +209,6 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
-        print(x.shape)
         x = self.net._pos_embed(x)
         x = self.net.patch_drop(x)
         x = self.net.norm_pre(x)
@@ -266,7 +265,16 @@ class ClassificationEvaluator(pl.LightningModule):
         self.net.patch_embed = nn.Identity()
 
     def get_new_patch_embed(self, new_image_size, new_patch_size):
-        new_patch_embed = FlexiPatchEmbed(
+        # new_patch_embed = FlexiPatchEmbed(
+        #     img_size=new_image_size,
+        #     patch_size=new_patch_size,
+        #     in_chans=self.in_chans,
+        #     embed_dim=self.embed_dim,
+        #     bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
+        #     # dynamic_img_pad=self.dynamic_img_pad,
+        #     # **self.embed_args,
+        # )
+        new_patch_embed = PatchEmbed(
             img_size=new_image_size,
             patch_size=new_patch_size,
             in_chans=self.in_chans,
