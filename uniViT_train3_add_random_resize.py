@@ -350,6 +350,7 @@ if __name__ == "__main__":
     wandb_logger = WandbLogger(name='ft-part-conv-uniViT', project='uniViT', entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/3_add_random_resize', save_top_k=1,save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
+
     # trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
