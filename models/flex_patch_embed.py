@@ -9,7 +9,7 @@ from functorch import vmap
 from torch import Tensor
 
 from flexivit_pytorch.utils import to_2tuple
-
+from timm.layers.format import Format, nchw_to
 
 class FlexiPatchEmbed(nn.Module):
     def __init__(
@@ -26,6 +26,7 @@ class FlexiPatchEmbed(nn.Module):
         patch_size_probs: Optional[Sequence[float]] = None,
         interpolation: str = "bicubic",
         antialias: bool = True,
+        output_fmt: Optional[str] = None,
     ) -> None:
         """2D image to patch embedding w/ flexible patch sizes
         Extended from: https://github.com/huggingface/pytorch-image-models/blob/main/timm/layers/patch_embed.py#L24
@@ -53,6 +54,13 @@ class FlexiPatchEmbed(nn.Module):
         self.num_patches = self.grid_size[0] * self.grid_size[1]
 
         self.flatten = flatten
+        if output_fmt is not None:
+            self.flatten = False
+            self.output_fmt = Format(output_fmt)
+        else:
+            # flatten spatial dim and transpose to channels last, kept for bwd compat
+            self.flatten = flatten
+            self.output_fmt = Format.NCHW
         self.proj = nn.Conv2d(
             in_chans,
             embed_dim,
@@ -162,7 +170,9 @@ class FlexiPatchEmbed(nn.Module):
         x = F.conv2d(x, weight, bias=self.proj.bias, stride=patch_size)
 
         if self.flatten:
-            x = x.flatten(2).transpose(1, 2)  # BCHW -> BNC
+            x = x.flatten(2).transpose(1, 2)  # NCHW -> NLC
+        elif self.output_fmt != Format.NCHW:
+            x = nchw_to(x, self.output_fmt)
 
         x = self.norm(x)
 
