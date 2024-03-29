@@ -20,6 +20,7 @@ from timm.models._manipulate import checkpoint_seq
 from timm.layers import PatchEmbed
 import torch.nn as nn
 from models.flex_patch_embed import FlexiPatchEmbed
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -347,7 +348,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
     wandb_logger = WandbLogger(name='ft-part-conv-uniViT', project='uniViT', entity='pigpeppa', offline=False)
-    trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc3", mode="max", dirpath='ckpt/uniViT/3_add_random_resize2', save_top_k=1,save_last=True)
+    trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
     # trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
