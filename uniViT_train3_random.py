@@ -138,7 +138,8 @@ class ClassificationEvaluator(pl.LightningModule):
         x = F.interpolate(x, size=self.image_size, mode='bilinear')
 
         # Pass through network
-        pred = self(x)
+        # pred = self(x)
+        _, _, pred = self.ms_forward(x)
         loss = self.loss_fn(pred, y)
 
         # Get accuracy
@@ -182,7 +183,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         params_to_optimize = list(self.patch_embed_56.parameters()) + \
                              list(self.patch_embed_112.parameters())
-                             # list(self.patch_embed_224.parameters())
+        # list(self.patch_embed_224.parameters())
 
         optimizer = torch.optim.SGD(
             params_to_optimize,
@@ -259,7 +260,6 @@ class ClassificationEvaluator(pl.LightningModule):
         self.patch_embed_224 = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
         self.patch_embed = self.get_new_patch_embed(new_image_size=new_image_size, new_patch_size=new_patch_size)
         # import pdb;pdb.set_trace()
-
 
         self.net.patch_embed = nn.Identity()
 
@@ -349,5 +349,5 @@ if __name__ == "__main__":
         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
-        trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-        # trainer.test(model, dataloaders=val_loader)
+        # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+        trainer.test(model, dataloaders=val_loader)
