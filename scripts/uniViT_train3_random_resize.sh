@@ -1,4 +1,4 @@
-python uniViT_train3_random_resize.py \
+python uniViT_train3_random.py \
   --max_epochs 10 \
   --precision 16 \
   --accelerator gpu \
