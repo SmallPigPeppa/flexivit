@@ -209,7 +209,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
-        import pdb;pdb.set_trace()
+        print(x.shape)
         x = self.net._pos_embed(x)
         x = self.net.patch_drop(x)
         x = self.net.norm_pre(x)
