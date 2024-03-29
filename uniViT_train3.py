@@ -172,19 +172,23 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
     def configure_optimizers(self):
-        self.lr = 0.001
+        self.lr = 0.01
         self.wd = 5e-4
         self.max_epochs = self.trainer.max_epochs
 
-        params_to_optimize = list(self.patch_embed_56.parameters()) + \
-                             list(self.patch_embed_112.parameters()) + \
-                             list(self.patch_embed_224.parameters())
+        # params_to_optimize = list(self.patch_embed_56.parameters()) + \
+        #                      list(self.patch_embed_112.parameters()) + \
+        #                      list(self.patch_embed_224.parameters())
 
-        # optimizer = torch.optim.SGD(
-        #     params_to_optimize,
-        #     lr=self.lr,
-        #     weight_decay=self.wd,
-        #     momentum=0.9)
+        params_to_optimize = list(self.patch_embed_56.parameters()) + \
+                             list(self.patch_embed_112.parameters())
+                             # list(self.patch_embed_224.parameters())
+
+        optimizer = torch.optim.SGD(
+            params_to_optimize,
+            lr=self.lr,
+            weight_decay=self.wd,
+            momentum=0.9)
         optimizer = torch.optim.SGD(
             self.parameters(),
             lr=self.lr,
