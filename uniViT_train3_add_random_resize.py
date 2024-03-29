@@ -205,7 +205,9 @@ class ClassificationEvaluator(pl.LightningModule):
             warmup_start_lr=0.01 * self.lr,
             eta_min=0.01 * self.lr,
         )
-        return [optimizer], [scheduler]
+        # return [optimizer], [scheduler]
+
+        return [optimizer]
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
@@ -237,28 +239,27 @@ class ClassificationEvaluator(pl.LightningModule):
 
     # def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
     #     x_0 = F.interpolate(x, size=56, mode='bilinear')
-    #     x_0 = self.patch_embed_56(x_0, patch_size=4)
+    #     x_0 = self.patch_embed_56(x_0)
     #
     #     x_1 = F.interpolate(x, size=112, mode='bilinear')
-    #     x_1 = self.patch_embed_112(x_1, patch_size=8)
+    #     x_1 = self.patch_embed_112(x_1)
     #
     #     x_2 = F.interpolate(x, size=224, mode='bilinear')
-    #     x_2 = self.patch_embed_224(x_2, patch_size=16)
+    #     x_2 = self.patch_embed_224(x_2)
     #
     #     return self(x_0), self(x_1), self(x_2)
 
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         x_0 = F.interpolate(x, size=56, mode='bilinear')
-        x_0 = self.patch_embed_56(x_0)
+        x_0 = self.patch_embed_56(x_0, patch_size=4)
 
         x_1 = F.interpolate(x, size=112, mode='bilinear')
-        x_1 = self.patch_embed_112(x_1)
+        x_1 = self.patch_embed_112(x_1, patch_size=8)
 
         x_2 = F.interpolate(x, size=224, mode='bilinear')
-        x_2 = self.patch_embed_224(x_2)
+        x_2 = self.patch_embed_224(x_2, patch_size=16)
 
         return self(x_0), self(x_1), self(x_2)
-
 
     def modified(self, new_image_size=224, new_patch_size=16):
         self.embed_args = {}
@@ -278,23 +279,14 @@ class ClassificationEvaluator(pl.LightningModule):
         self.net.patch_embed = nn.Identity()
 
     def get_new_patch_embed(self, new_image_size, new_patch_size):
-        # new_patch_embed = FlexiPatchEmbed(
-        #     img_size=new_image_size,
-        #     patch_size=new_patch_size,
-        #     in_chans=self.in_chans,
-        #     embed_dim=self.embed_dim,
-        #     bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
-        #     # dynamic_img_pad=self.dynamic_img_pad,
-        #     # **self.embed_args,
-        # )
-        new_patch_embed = PatchEmbed(
+        new_patch_embed = FlexiPatchEmbed(
             img_size=new_image_size,
             patch_size=new_patch_size,
             in_chans=self.in_chans,
             embed_dim=self.embed_dim,
             bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
             # dynamic_img_pad=self.dynamic_img_pad,
-            # **self.embed_args,
+            **self.embed_args,
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
             origin_weight = self.net.patch_embed.proj.weight.clone().detach()
@@ -314,6 +306,36 @@ class ClassificationEvaluator(pl.LightningModule):
 
         return new_patch_embed
 
+
+# if __name__ == "__main__":
+#     parser = LightningArgumentParser()
+#     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
+#     parser.add_lightning_class_args(ClassificationEvaluator, "model")
+#     parser.add_argument("--batch_size", type=int, default=256)
+#     parser.add_argument("--works", type=int, default=4)
+#     parser.add_argument("--root", type=str, default='./data')
+#     args = parser.parse_args()
+#     # args["logger"] = False  # Disable saving logging artifacts
+#     # wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
+#     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
+#     trainer = pl.Trainer.from_argparse_args(args)
+#     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
+#     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
+#     for image_size, patch_size in [(224, 16)]:
+#         args["model"].image_size = image_size
+#         args["model"].patch_size = patch_size
+#         model = ClassificationEvaluator(**args["model"])
+#         data_config = timm.data.resolve_model_data_config(model.net)
+#         val_transform = timm.data.create_transform(**data_config, is_training=False)
+#         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
+#         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
+#                                 shuffle=False, pin_memory=True)
+#         train_transform = timm.data.create_transform(**data_config, is_training=True)
+#         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
+#         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
+#                                   shuffle=True, pin_memory=True)
+#         # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+#         trainer.test(model, dataloaders=val_loader)
 
 if __name__ == "__main__":
     parser = LightningArgumentParser()
@@ -342,5 +364,5 @@ if __name__ == "__main__":
         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
-        trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-        # trainer.test(model, dataloaders=val_loader)
+        # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+        trainer.test(model, dataloaders=val_loader)
