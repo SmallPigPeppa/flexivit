@@ -172,8 +172,8 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
     def configure_optimizers(self):
-        self.lr = 0.001
-        self.wd = 5e-4
+        self.lr = 0.003
+        self.wd = 0.3
         self.max_epochs = self.trainer.max_epochs
 
         params_to_optimize = list(self.patch_embed_56.parameters()) + \
@@ -326,7 +326,7 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='ft-all-param-uniViT', project='uniViT', entity='pigpeppa', offline=False)
+    wandb_logger = WandbLogger(name='ft-all-param-uniViT-wd0.3', project='uniViT', entity='pigpeppa', offline=False)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     # trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),

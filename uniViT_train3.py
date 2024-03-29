@@ -172,7 +172,7 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
     def configure_optimizers(self):
-        self.lr = 0.01
+        self.lr = 0.002
         self.wd = 5e-4
         self.max_epochs = self.trainer.max_epochs
 
@@ -189,11 +189,12 @@ class ClassificationEvaluator(pl.LightningModule):
             lr=self.lr,
             weight_decay=self.wd,
             momentum=0.9)
-        optimizer = torch.optim.SGD(
-            self.parameters(),
-            lr=self.lr,
-            weight_decay=self.wd,
-            momentum=0.9)
+
+        # optimizer = torch.optim.SGD(
+        #     self.parameters(),
+        #     lr=self.lr,
+        #     weight_decay=self.wd,
+        #     momentum=0.9)
 
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
