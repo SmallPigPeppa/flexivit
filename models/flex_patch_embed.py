@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from einops import rearrange
 from functorch import vmap
 from torch import Tensor
+
 from flexivit_pytorch.utils import to_2tuple
 
 
@@ -21,6 +22,8 @@ class FlexiPatchEmbed(nn.Module):
         norm_layer: Optional[nn.Module] = None,
         flatten: bool = True,
         bias: bool = True,
+        patch_size_seq: Sequence[int] = (8, 10, 12, 15, 16, 20, 24, 30, 40, 48),
+        patch_size_probs: Optional[Sequence[float]] = None,
         interpolation: str = "bicubic",
         antialias: bool = True,
     ) -> None:
@@ -62,6 +65,19 @@ class FlexiPatchEmbed(nn.Module):
         # Flexi specific attributes
         self.interpolation = interpolation
         self.antialias = antialias
+
+        self.patch_size_seq = patch_size_seq
+
+        if self.patch_size_seq:
+            if not patch_size_probs:
+                n = len(self.patch_size_seq)
+                self.patch_size_probs = [1.0 / n] * n
+            else:
+                self.patch_size_probs = [
+                    p / sum(patch_size_probs) for p in patch_size_probs
+                ]
+        else:
+            self.patch_size_probs = []
 
         # Pre-calculate pinvs
         self.pinvs = self._cache_pinvs()
@@ -124,9 +140,15 @@ class FlexiPatchEmbed(nn.Module):
         return_patch_size: bool = False,
     ) -> Union[Tensor, Tuple[Tensor, Tuple[int, int]]]:
 
-        if not patch_size:
+        if not patch_size and not self.training:
             # During evaluation use base patch size if not specified
             patch_size = self.patch_size
+        elif not patch_size:
+            # During training choose uniformly at random if not specified
+            assert (
+                self.patch_size_seq
+            ), "No patch size specified during forward and no patch_size_seq given to FlexiPatchEmbed"
+            patch_size = np.random.choice(self.patch_size_seq, p=self.patch_size_probs)
 
         patch_size = to_2tuple(patch_size)
 
