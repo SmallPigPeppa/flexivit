@@ -19,6 +19,7 @@ from timm.models._manipulate import checkpoint_seq
 
 from timm.layers import PatchEmbed
 import torch.nn as nn
+from models.flex_patch_embed import FlexiPatchEmbed
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -234,15 +235,27 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.forward_head(x)
         return x
 
+    # def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
+    #     x_0 = F.interpolate(x, size=56, mode='bilinear')
+    #     x_0 = self.patch_embed_56(x_0)
+    #
+    #     x_1 = F.interpolate(x, size=112, mode='bilinear')
+    #     x_1 = self.patch_embed_112(x_1)
+    #
+    #     x_2 = F.interpolate(x, size=224, mode='bilinear')
+    #     x_2 = self.patch_embed_224(x_2)
+    #
+    #     return self(x_0), self(x_1), self(x_2)
+
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         x_0 = F.interpolate(x, size=56, mode='bilinear')
-        x_0 = self.patch_embed_56(x_0)
+        x_0 = self.patch_embed_56(x_0, patch_size=4)
 
         x_1 = F.interpolate(x, size=112, mode='bilinear')
-        x_1 = self.patch_embed_112(x_1)
+        x_1 = self.patch_embed_112(x_1, patch_size=8)
 
         x_2 = F.interpolate(x, size=224, mode='bilinear')
-        x_2 = self.patch_embed_224(x_2)
+        x_2 = self.patch_embed_224(x_2, patch_size=16)
 
         return self(x_0), self(x_1), self(x_2)
 
@@ -264,14 +277,14 @@ class ClassificationEvaluator(pl.LightningModule):
         self.net.patch_embed = nn.Identity()
 
     def get_new_patch_embed(self, new_image_size, new_patch_size):
-        new_patch_embed = PatchEmbed(
+        new_patch_embed = FlexiPatchEmbed(
             img_size=new_image_size,
             patch_size=new_patch_size,
             in_chans=self.in_chans,
             embed_dim=self.embed_dim,
             bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
-            dynamic_img_pad=self.dynamic_img_pad,
-            **self.embed_args,
+            # dynamic_img_pad=self.dynamic_img_pad,
+            # **self.embed_args,
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
             origin_weight = self.net.patch_embed.proj.weight.clone().detach()
