@@ -1,4 +1,4 @@
-python uniViT_train.py \
+python vanilla_train.py \
   --max_epochs 10 \
   --precision 16 \
   --accelerator gpu \
@@ -12,6 +12,3 @@ python uniViT_train.py \
   --model.patch_size 16 \
   --model.image_size 224 \
   --model.results_path ./resize_weight.csv
-
-
-
