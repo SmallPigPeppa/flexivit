@@ -27,6 +27,7 @@ class FlexiPatchEmbed(nn.Module):
         interpolation: str = "bicubic",
         antialias: bool = True,
         output_fmt: Optional[str] = None,
+        strict_img_size=False
     ) -> None:
         """2D image to patch embedding w/ flexible patch sizes
         Extended from: https://github.com/huggingface/pytorch-image-models/blob/main/timm/layers/patch_embed.py#L24
