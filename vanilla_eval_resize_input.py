@@ -91,8 +91,8 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def test_step(self, batch, _):
         x, y = batch
-        x = F.interpolate(x, size=self.image_size_d, mode='bicubic')
-        x = F.interpolate(x, size=224, mode='bicubic')
+        x = F.interpolate(x, size=self.image_size_d, mode='bicubic',antialias=True)
+        x = F.interpolate(x, size=224, mode='bicubic',antialias=True)
 
         # Pass through network
         pred = self(x)
