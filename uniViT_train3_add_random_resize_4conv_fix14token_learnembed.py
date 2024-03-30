@@ -80,7 +80,7 @@ class ClassificationEvaluator(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         embed_4x4, embed_8x8, embed_12x12, embed_16x16 = self.rand_ms_embedding(x)
-        embed_16x16_origin = self.net._pos_embed(self.patch_embed_16x16_origin(x, patch_size=16))
+        embed_16x16_origin = self.patch_embed_16x16_origin(x, patch_size=16)
 
         # print('embed_4x4.shape, embed_8x8.shape, embed_12x12.shape, embed_16x16.shape:', embed_4x4.shape,
         #       embed_8x8.shape, embed_12x12.shape, embed_16x16.shape)
@@ -182,7 +182,7 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
     def configure_optimizers(self):
-        self.lr = 0.01
+        self.lr = 0.001
         self.wd = 5e-4
         self.max_epochs = self.trainer.max_epochs
 
@@ -299,8 +299,9 @@ class ClassificationEvaluator(pl.LightningModule):
         x_16x16 = F.interpolate(x, size=(img_size_16x16, img_size_16x16), mode='bilinear')
         x_16x16 = self.patch_embed_16x16(x_16x16, patch_size=patch_size_16x16)
 
-        return self.net._pos_embed(x_4x4), self.net._pos_embed(x_8x8), self.net._pos_embed(
-            x_12x12), self.net._pos_embed(x_16x16)
+        # return self.net._pos_embed(x_4x4), self.net._pos_embed(x_8x8), self.net._pos_embed(
+        #     x_12x12), self.net._pos_embed(x_16x16)
+        return x_4x4, x_8x8, x_12x12, x_16x16
 
     def rand_ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         # 随机选择token数量，对应的分辨率是token数量乘以patch_size
