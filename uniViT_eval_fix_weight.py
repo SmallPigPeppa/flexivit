@@ -164,16 +164,17 @@ class ClassificationEvaluator(pl.LightningModule):
         pred0, pred1, pred2 = self.ms_forward(x)
 
         # Get accuracy
-        acc0 = self.acc(pred0, y)
-        acc1 = self.acc(pred1, y)
-        acc2 = self.acc(pred2, y)
+        acc_0 = self.acc_0(pred0, y)
+        acc_1 = self.acc_1(pred1, y)
+        acc_2 = self.acc_2(pred2, y)
 
         # Log
-        self.log_dict({'test_loss': loss, 'test_acc': acc}, sync_dist=True, on_epoch=True)
+        out_dict = {'test_acc_0': acc_0, 'test_acc_1': acc_1, 'test_acc_2': acc_2}
+        self.log_dict(out_dict, sync_dist=True, on_epoch=True)
 
-        return loss
+        return out_dict
 
-    def test_epoch_end(self, outputs):
+    def test_epoch_end_old_old(self, outputs):
         if self.results_path:
             acc = self.acc.compute().detach().cpu().item()
             acc = acc * 100
@@ -191,6 +192,39 @@ class ClassificationEvaluator(pl.LightningModule):
                     results_df = pd.DataFrame({column_name: [acc]})
                     # 确保目录存在
                     os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
+
+                # 保存更新后的结果
+                results_df.to_csv(self.results_path)
+
+    def test_epoch_end(self, outputs):
+        if self.results_path:
+            # 计算每个acc并乘以100
+            acc_0 = self.acc_0.compute().detach().cpu().item() * 100
+            acc_1 = self.acc_1.compute().detach().cpu().item() * 100
+            acc_2 = self.acc_2.compute().detach().cpu().item() * 100
+            max_acc = max(acc_0, acc_1, acc_2)
+
+            # 确保所有进程都执行到这里，但只有主进程进行写入操作
+            if self.trainer.is_global_zero:
+                column_name = f"{self.image_size}_{self.patch_size}"
+
+                if os.path.exists(self.results_path):
+                    # 结果文件已存在，读取现有数据
+                    results_df = pd.read_csv(self.results_path, index_col=0)
+                    # 检查列是否存在，若不存在则在适当位置添加
+                    if column_name not in results_df:
+                        results_df[column_name] = [None] * len(results_df)  # 先添加空列，防止DataFrame对齐问题
+                else:
+                    # 结果文件不存在，创建新的DataFrame，此时有5行
+                    results_df = pd.DataFrame(columns=[column_name], index=['acc0', 'acc1', 'acc2', 'max_acc'])
+                    # 确保目录存在
+                    os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
+
+                # 更新DataFrame中的值
+                results_df.at['acc0', column_name] = acc_0
+                results_df.at['acc1', column_name] = acc_1
+                results_df.at['acc2', column_name] = acc_2
+                results_df.at['max_acc', column_name] = max_acc
 
                 # 保存更新后的结果
                 results_df.to_csv(self.results_path)
@@ -273,13 +307,13 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         x_0 = F.interpolate(x, size=56, mode='bilinear')
-        x_0 = self.patch_embed_56(x_0, patch_size=4)
+        x_0 = self.patch_embed_56(x_0, patch_size=self.patch_size)
 
         x_1 = F.interpolate(x, size=112, mode='bilinear')
-        x_1 = self.patch_embed_112(x_1, patch_size=8)
+        x_1 = self.patch_embed_112(x_1, patch_size=self.patch_size)
 
         x_2 = F.interpolate(x, size=224, mode='bilinear')
-        x_2 = self.patch_embed_224(x_2, patch_size=16)
+        x_2 = self.patch_embed_224(x_2, patch_size=self.patch_size)
 
         return self(x_0), self(x_1), self(x_2)
 
@@ -348,7 +382,9 @@ if __name__ == "__main__":
         # for image_size, patch_size in [(224, 16)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
-        model = ClassificationEvaluator(**args["model"])
+        # model = ClassificationEvaluator(**args["model"])
+        ckpt_path = '/mnt/mmtech01/usr/liuwenzhuo/code/test-code/flexivit/ckpt/uniViT/3_add_random_resize-v2/last-v1.ckpt'
+        model = ClassificationEvaluator.load_from_checkpoint(ckpt_path)
         data_config = timm.data.resolve_model_data_config(model.net)
         val_transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
