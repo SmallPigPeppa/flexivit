@@ -206,9 +206,9 @@ class ClassificationEvaluator(pl.LightningModule):
             warmup_start_lr=0.01 * self.lr,
             eta_min=0.01 * self.lr,
         )
-        # return [optimizer], [scheduler]
+        return [optimizer], [scheduler]
 
-        return [optimizer]
+        # return [optimizer]
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
@@ -348,7 +348,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
     wandb_logger = WandbLogger(name='ft-part-conv-uniViT', project='uniViT', entity='pigpeppa', offline=False)
-    checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/3_add_random_resize', save_top_k=1,save_last=True)
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/3_add_random_resize-v2', save_top_k=1,save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
 
     # trainer = pl.Trainer.from_argparse_args(args)
