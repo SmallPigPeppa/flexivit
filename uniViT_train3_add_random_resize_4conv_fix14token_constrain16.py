@@ -90,7 +90,7 @@ class ClassificationEvaluator(pl.LightningModule):
         acc_16x16 = self.acc(logits_16x16, y)
 
         # constrain
-        embed_16x16 = self.patch_embed_4x4(x, patch_size=16)
+        embed_16x16 = self.patch_embed_16x16(x, patch_size=16)
         embed_16x16_origin = self.patch_embed_16x16_origin(x, patch_size=16)
         loss_constrain16 = F.mse_loss(embed_16x16, embed_16x16_origin)
 
