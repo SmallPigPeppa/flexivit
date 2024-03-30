@@ -11,7 +11,7 @@ python uniViT_eval_fix_weight.py \
   --model.num_classes 1000 \
   --model.patch_size 16 \
   --model.image_size 224 \
-  --model.results_path ./uniViT_fix_weight.csv
+  --model.results_path ./uniViT_fix_weight_debug.csv
 
 
 

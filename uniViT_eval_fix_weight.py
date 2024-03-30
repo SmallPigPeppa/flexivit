@@ -398,5 +398,5 @@ if __name__ == "__main__":
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
         # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-        import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         trainer.test(model, dataloaders=val_loader)
