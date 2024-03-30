@@ -393,6 +393,6 @@ if __name__ == "__main__":
         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
-        import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
         # trainer.test(model, dataloaders=val_loader)
