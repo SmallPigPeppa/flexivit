@@ -317,9 +317,11 @@ class ClassificationEvaluator(pl.LightningModule):
         x_1 = self.patch_embed_8x8(x, patch_size=self.patch_size)
 
         # x_2 = F.interpolate(x, size=224, mode='bilinear')
-        x_2 = self.patch_embed_16x16(x, patch_size=self.patch_size)
+        x_2 = self.patch_embed_12x12(x, patch_size=self.patch_size)
 
-        return self(x_0), self(x_1), self(x_2)
+        x_3 = self.patch_embed_16x16(x, patch_size=self.patch_size)
+
+        return self(x_0), self(x_1), self(x_2), self(x_3)
 
     def modified(self, new_image_size=224, new_patch_size=16):
         self.embed_args = {}
