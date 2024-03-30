@@ -168,7 +168,7 @@ class ClassificationEvaluator(pl.LightningModule):
         acc_0 = self.acc_0(pred0, y)
         acc_1 = self.acc_1(pred1, y)
         acc_2 = self.acc_2(pred2, y)
-        acc_3 = self.acc_2(pred3, y)
+        acc_3 = self.acc_3(pred3, y)
 
         # Log
         out_dict = {'test_acc_0': acc_0, 'test_acc_1': acc_1, 'test_acc_2': acc_2, 'test_acc_3': acc_3}
