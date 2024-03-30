@@ -20,6 +20,7 @@ from timm.models._manipulate import checkpoint_seq
 from timm.layers import PatchEmbed
 import torch.nn as nn
 from models.flex_patch_embed import FlexiPatchEmbed
+import random
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 
@@ -79,21 +80,21 @@ class ClassificationEvaluator(pl.LightningModule):
     # def forward(self, x):
     #     return self.net(x)
 
-    def training_step_old(self, batch, batch_idx):
-        x, y = batch
-        logits = self(x)
-        loss = self.loss_fn(logits, y)
-        acc = self.acc(logits, y)
-
-        # out dict
-        out_dict = {'loss': loss, 'train_loss': loss, 'train_acc': acc}
-        # Log
-        self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
-        return out_dict
+    # def training_step_old(self, batch, batch_idx):
+    #     x, y = batch
+    #     logits = self(x)
+    #     loss = self.loss_fn(logits, y)
+    #     acc = self.acc(logits, y)
+    #
+    #     # out dict
+    #     out_dict = {'loss': loss, 'train_loss': loss, 'train_acc': acc}
+    #     # Log
+    #     self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
+    #     return out_dict
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        logits_0, logits_1, logits_2 = self.ms_forward(x)
+        logits_0, logits_1, logits_2 = self.rand_ms_forward(x)
         loss_0 = self.loss_fn(logits_0, y)
         acc_0 = self.acc(logits_0, y)
         loss_1 = self.loss_fn(logits_1, y)
@@ -175,16 +176,16 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
     def configure_optimizers(self):
-        self.lr = 0.002
+        self.lr = 0.001
         self.wd = 5e-4
         self.max_epochs = self.trainer.max_epochs
 
-        # params_to_optimize = list(self.patch_embed_56.parameters()) + \
-        #                      list(self.patch_embed_112.parameters()) + \
-        #                      list(self.patch_embed_224.parameters())
-
         params_to_optimize = list(self.patch_embed_56.parameters()) + \
-                             list(self.patch_embed_112.parameters())
+                             list(self.patch_embed_112.parameters()) + \
+                             list(self.patch_embed_224.parameters())
+
+        # params_to_optimize = list(self.patch_embed_56.parameters()) + \
+        #                      list(self.patch_embed_112.parameters())
         # list(self.patch_embed_224.parameters())
 
         optimizer = torch.optim.SGD(
@@ -259,6 +260,30 @@ class ClassificationEvaluator(pl.LightningModule):
 
         x_2 = F.interpolate(x, size=224, mode='bilinear')
         x_2 = self.patch_embed_224(x_2, patch_size=16)
+
+        return self(x_0), self(x_1), self(x_2)
+
+
+    def rand_ms_forward(self, x: torch.Tensor) -> torch.Tensor:
+        # 随机选择token数量，对应的分辨率是token数量乘以patch_size
+        # patch_embed_56 使用 patch_size=4
+        token_num_56 = random.randint(10, 18)
+        size_56 = token_num_56 * 4
+        x_0 = F.interpolate(x, size=(size_56, size_56), mode='bilinear')
+        x_0 = self.patch_embed_56(x_0, patch_size=4)  # 假设patch_embed_56可以处理变化的输入尺寸
+
+        # patch_embed_112 使用随机选择的patch_size 6, 8, 或 10
+        token_num_112 = random.randint(10, 18)
+        patch_size_112 = random.choice([6, 8, 10])
+        size_112 = token_num_112 * patch_size_112
+        x_1 = F.interpolate(x, size=(size_112, size_112), mode='bilinear')
+        x_1 = self.patch_embed_112(x_1, patch_size=patch_size_112)  # 假设patch_embed_112可以处理变化的输入尺寸
+
+        # patch_embed_224 使用 patch_size=16
+        token_num_224 = random.randint(10, 18)
+        size_224 = token_num_224 * 16
+        x_2 = F.interpolate(x, size=(size_224, size_224), mode='bilinear')
+        x_2 = self.patch_embed_224(x_2, patch_size=16)  # 假设patch_embed_224可以处理变化的输入尺寸
 
         return self(x_0), self(x_1), self(x_2)
 
@@ -347,9 +372,10 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='ft-part-conv-uniViT', project='uniViT', entity='pigpeppa', offline=False)
-    checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/3_add_random_resize-v2', save_top_k=1,save_last=True)
+    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize', project='uniViT', entity='pigpeppa', offline=False)
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/add_random_resize', save_top_k=1,save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
+    # lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
     # trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
@@ -367,5 +393,6 @@ if __name__ == "__main__":
         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
+        # import pdb;pdb.set_trace()
         trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
         # trainer.test(model, dataloaders=val_loader)

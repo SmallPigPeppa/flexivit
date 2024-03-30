@@ -373,8 +373,8 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-random-resize3', project='uniViT', entity='pigpeppa', offline=False)
-    checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/3_add_random_resize3-v2', save_top_k=1,save_last=True)
+    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-exclude224', project='uniViT', entity='pigpeppa', offline=False)
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/add-random-resize-exclude224', save_top_k=1,save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
     # lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
