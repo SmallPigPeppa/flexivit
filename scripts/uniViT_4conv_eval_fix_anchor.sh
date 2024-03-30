@@ -4,7 +4,7 @@ python uniViT_4conv_eval_fix_anchor.py \
   --accelerator gpu \
   --devices 8 \
   --works 4 \
-  --batch_size 32 \
+  --batch_size 64 \
   --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --ckpt_path ckpt/uniViT/no-random-resize-4conv/last.ckpt \
   --model.resize_type pi \
