@@ -79,18 +79,22 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        x_4x4, x_8x8, x_12x12, x_16x16 = self.rand_ms_embedding(x)
-        x_16x16_origin = self.patch_embed_16x16_origin(x)
-        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.forward_afterembed(x_4x4), self.forward_afterembed(
-            x_8x8), self.forward_afterembed(x_12x12), self.forward_afterembed(x_16x16)
-        loss_4x4 = self.loss_fn(logits_4x4, y)
-        acc_4x4 = self.acc(logits_4x4, y)
-        loss_8x8 = self.loss_fn(logits_8x8, y)
-        acc_8x8 = self.acc(logits_8x8, y)
-        loss_12x12 = self.loss_fn(logits_12x12, y)
-        acc_12x12 = self.acc(logits_12x12, y)
-        loss_16x16 = self.loss_fn(logits_16x16, y)
-        acc_16x16 = self.acc(logits_16x16, y)
+        embed_4x4, embed_8x8, embed_12x12, embed_16x16 = self.rand_ms_embedding(x)
+        embed_16x16_origin = self.patch_embed_16x16_origin(x)
+        loss_4x4 = F.mse_loss(embed_4x4, embed_16x16_origin)
+        loss_8x8 = F.mse_loss(embed_8x8, embed_16x16_origin)
+        loss_12x12 = F.mse_loss(embed_12x12, embed_16x16_origin)
+        loss_16x16 = F.mse_loss(embed_16x16, embed_16x16_origin)
+        # logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.forward_afterembed(x_4x4), self.forward_afterembed(
+        #     x_8x8), self.forward_afterembed(x_12x12), self.forward_afterembed(x_16x16)
+        # loss_4x4 = self.loss_fn(logits_4x4, y)
+        # acc_4x4 = self.acc(logits_4x4, y)
+        # loss_8x8 = self.loss_fn(logits_8x8, y)
+        # acc_8x8 = self.acc(logits_8x8, y)
+        # loss_12x12 = self.loss_fn(logits_12x12, y)
+        # acc_12x12 = self.acc(logits_12x12, y)
+        # loss_16x16 = self.loss_fn(logits_16x16, y)
+        # acc_16x16 = self.acc(logits_16x16, y)
 
         loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16
         out_dict = {'loss': loss,
@@ -98,10 +102,10 @@ class ClassificationEvaluator(pl.LightningModule):
                     'train_loss_8x8': loss_8x8,
                     'train_loss_12x12': loss_12x12,
                     'train_loss_16x16': loss_16x16,
-                    'train_acc_4x4': acc_4x4,
-                    'train_acc_8x8': acc_8x8,
-                    'train_acc_12x12': acc_12x12,
-                    'train_acc_16x16': acc_16x16
+                    # 'train_acc_4x4': acc_4x4,
+                    # 'train_acc_8x8': acc_8x8,
+                    # 'train_acc_12x12': acc_12x12,
+                    # 'train_acc_16x16': acc_16x16
                     }
         # Log
         self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
@@ -378,10 +382,10 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-4conv-fix14token', project='uniViT',
+    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-4conv-fix14token_learnembed', project='uniViT',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/uniViT/add_random_resize_4conv_fix14token', save_top_k=1,
+                                          dirpath='ckpt/uniViT/add_random_resize_4conv_fix14token_learnembed', save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
     # lr_monitor = LearningRateMonitor(logging_interval="epoch")
