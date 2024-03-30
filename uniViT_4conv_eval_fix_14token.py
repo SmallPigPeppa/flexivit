@@ -10,17 +10,12 @@ from torch.nn import CrossEntropyLoss
 from torchmetrics.classification.accuracy import Accuracy
 import torch.nn.functional as F
 from flexivit_pytorch import (interpolate_resize_patch_embed, pi_resize_patch_embed)
-from flexivit_pytorch.utils import resize_abs_pos_embed
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
-from pytorch_lightning.loggers import WandbLogger
-from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 from timm.models._manipulate import checkpoint_seq
 
-from timm.layers import PatchEmbed
 import torch.nn as nn
 from models.flex_patch_embed import FlexiPatchEmbed
-from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -80,13 +75,11 @@ class ClassificationEvaluator(pl.LightningModule):
         # modified
         self.modified(new_image_size=self.image_size, new_patch_size=self.patch_size)
 
-
     def test_step(self, batch, _):
         x, y = batch
         x = F.interpolate(x, size=self.image_size, mode='bilinear')
 
         # Pass through network
-        # pred = self(x)
         pred0, pred1, pred2, pred3 = self.ms_forward(x)
 
         # Get accuracy
@@ -96,32 +89,16 @@ class ClassificationEvaluator(pl.LightningModule):
         acc_3 = self.acc_3(pred3, y)
 
         # Log
-        out_dict = {'test_acc_0': acc_0, 'test_acc_1': acc_1, 'test_acc_2': acc_2, 'test_acc_3': acc_3}
+        out_dict = {
+            'res': self.image_size,
+            'test_acc_0': acc_0,
+            'test_acc_1': acc_1,
+            'test_acc_2': acc_2,
+            'test_acc_3': acc_3
+        }
         self.log_dict(out_dict, sync_dist=True, on_epoch=True)
 
         return out_dict
-
-    # def test_epoch_end_old_old(self, outputs):
-    #     if self.results_path:
-    #         acc = self.acc.compute().detach().cpu().item()
-    #         acc = acc * 100
-    #         # 让所有进程都执行到这里，但只有主进程进行写入操作
-    #         if self.trainer.is_global_zero:
-    #             column_name = f"{self.image_size}_{self.patch_size}"
-    #
-    #             if os.path.exists(self.results_path):
-    #                 # 结果文件已存在，读取现有数据
-    #                 results_df = pd.read_csv(self.results_path, index_col=0)
-    #                 # 检查列是否存在，若不存在则添加
-    #                 results_df[column_name] = acc
-    #             else:
-    #                 # 结果文件不存在，创建新的DataFrame
-    #                 results_df = pd.DataFrame({column_name: [acc]})
-    #                 # 确保目录存在
-    #                 os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
-    #
-    #             # 保存更新后的结果
-    #             results_df.to_csv(self.results_path)
 
     def test_epoch_end(self, outputs):
         if self.results_path:
@@ -158,42 +135,6 @@ class ClassificationEvaluator(pl.LightningModule):
                 # 保存更新后的结果
                 results_df.to_csv(self.results_path)
 
-    # def configure_optimizers(self):
-    #     self.lr = 0.002
-    #     self.wd = 5e-4
-    #     self.max_epochs = self.trainer.max_epochs
-    #
-    #     # params_to_optimize = list(self.patch_embed_56.parameters()) + \
-    #     #                      list(self.patch_embed_112.parameters()) + \
-    #     #                      list(self.patch_embed_224.parameters())
-    #
-    #     params_to_optimize = list(self.patch_embed_56.parameters()) + \
-    #                          list(self.patch_embed_112.parameters())
-    #     # list(self.patch_embed_224.parameters())
-    #
-    #     optimizer = torch.optim.SGD(
-    #         params_to_optimize,
-    #         lr=self.lr,
-    #         weight_decay=self.wd,
-    #         momentum=0.9)
-    #
-    #     # optimizer = torch.optim.SGD(
-    #     #     self.parameters(),
-    #     #     lr=self.lr,
-    #     #     weight_decay=self.wd,
-    #     #     momentum=0.9)
-    #
-    #     scheduler = LinearWarmupCosineAnnealingLR(
-    #         optimizer,
-    #         warmup_epochs=5,
-    #         max_epochs=self.max_epochs,
-    #         warmup_start_lr=0.01 * self.lr,
-    #         eta_min=0.01 * self.lr,
-    #     )
-    #     return [optimizer], [scheduler]
-
-    # return [optimizer]
-
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
         x = self.net._pos_embed(x)
@@ -222,18 +163,6 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.forward_head(x)
         return x
 
-    # def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
-    #     x_0 = F.interpolate(x, size=56, mode='bilinear')
-    #     x_0 = self.patch_embed_56(x_0)
-    #
-    #     x_1 = F.interpolate(x, size=112, mode='bilinear')
-    #     x_1 = self.patch_embed_112(x_1)
-    #
-    #     x_2 = F.interpolate(x, size=224, mode='bilinear')
-    #     x_2 = self.patch_embed_224(x_2)
-    #
-    #     return self(x_0), self(x_1), self(x_2)
-
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         # x_0 = F.interpolate(x, size=56, mode='bilinear')
         x_0 = self.patch_embed_4x4(x, patch_size=self.patch_size)
@@ -241,9 +170,10 @@ class ClassificationEvaluator(pl.LightningModule):
         # x_1 = F.interpolate(x, size=112, mode='bilinear')
         x_1 = self.patch_embed_8x8(x, patch_size=self.patch_size)
 
-        # x_2 = F.interpolate(x, size=224, mode='bilinear')
+        # x_2 = F.interpolate(x, size=168, mode='bilinear')
         x_2 = self.patch_embed_12x12(x, patch_size=self.patch_size)
 
+        # x_3 = F.interpolate(x, size=224, mode='bilinear')
         x_3 = self.patch_embed_16x16(x, patch_size=self.patch_size)
 
         return self(x_0), self(x_1), self(x_2), self(x_3)
@@ -278,17 +208,11 @@ class ClassificationEvaluator(pl.LightningModule):
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
             origin_weight = self.net.patch_embed.proj.weight.clone().detach()
-            # new_weight = pi_resize_patch_embed(
-            #     patch_embed=self.origin_state_dict["patch_embed.proj.weight"],
-            #     new_patch_size=(new_patch_size, new_patch_size)
-            # )
             new_weight = pi_resize_patch_embed(
                 patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
             )
             new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
         if self.net.patch_embed.proj.bias is not None:
-            # new_patch_embed.proj.bias = nn.Parameter(torch.tensor(self.origin_state_dict["patch_embed.proj.bias"]),
-            #                                          requires_grad=True)
             new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
                                                      requires_grad=True)
 
@@ -302,34 +226,29 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--works", type=int, default=4)
     parser.add_argument("--root", type=str, default='./data')
+    parser.add_argument("--ckpt_path", type=str, default='./ckpt')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    # wandb_logger = WandbLogger(name='ft-part-conv-uniViT', project='uniViT', entity='pigpeppa', offline=False)
-    # checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/3_add_random_resize-v2', save_top_k=1,save_last=True)
-    # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
-
     trainer = pl.Trainer.from_argparse_args(args)
-    # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
-    #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
+
+
+
+    results_path = f"./{args.ckpt_path.split('/')[-2]}_fix_14token.csv"
+    print(f'result save in {results_path} ...')
+    if os.path.exists(results_path):
+        print(f'exist {results_path}, removing ...')
+        os.remove(results_path)
+
     for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10),
-                                   (154, 11), (168, 12),
-                                   (182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
-        # for image_size, patch_size in [(224, 16)]:
+                                   (154, 11), (168, 12),(182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
+
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
-        # model = ClassificationEvaluator(**args["model"])
-        # ckpt_path = '/mnt/mmtech01/usr/liuwenzhuo/code/test-code/flexivit/ckpt/uniViT/3_add_random_resize-v2/last-v1.ckpt'
-        ckpt_path = '/mnt/mmtech01/usr/liuwenzhuo/code/test-code/flexivit/ckpt/uniViT/3_add_random_resize2-v3/last.ckpt'
-        ckpt_path = '/mnt/mmtech01/usr/liuwenzhuo/code/test-code/uniViT/ckpt/uniViT/no-random-resize-4conv/last.ckpt'
-        model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=ckpt_path, strict=True, **args["model"])
+        args["model"].results_path = results_path
+        model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True, **args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
         val_transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
                                 shuffle=False, pin_memory=True)
-        train_transform = timm.data.create_transform(**data_config, is_training=True)
-        train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
-        train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
-                                  shuffle=True, pin_memory=True)
-        # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
         trainer.test(model, dataloaders=val_loader)
