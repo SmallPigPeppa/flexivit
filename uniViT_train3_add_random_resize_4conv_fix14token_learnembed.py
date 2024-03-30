@@ -81,6 +81,9 @@ class ClassificationEvaluator(pl.LightningModule):
         x, y = batch
         embed_4x4, embed_8x8, embed_12x12, embed_16x16 = self.rand_ms_embedding(x)
         embed_16x16_origin = self.net._pos_embed(self.patch_embed_16x16_origin(x))
+
+        import pdb;pdb.set_trace()
+
         loss_4x4 = F.mse_loss(embed_4x4, embed_16x16_origin)
         loss_8x8 = F.mse_loss(embed_8x8, embed_16x16_origin)
         loss_12x12 = F.mse_loss(embed_12x12, embed_16x16_origin)
