@@ -373,7 +373,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
     wandb_logger = WandbLogger(name='ft-part-conv-uniViT-random-resize', project='uniViT', entity='pigpeppa', offline=False)
-    checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/3_add_random_resize2-v2', save_top_k=1,save_last=True)
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max", dirpath='ckpt/uniViT/3_add_random_resize2-v3', save_top_k=1,save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
     # lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
@@ -393,5 +393,6 @@ if __name__ == "__main__":
         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
+        import pdb;pdb.set_trace()
         trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
         # trainer.test(model, dataloaders=val_loader)
