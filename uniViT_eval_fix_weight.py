@@ -385,6 +385,7 @@ if __name__ == "__main__":
         # model = ClassificationEvaluator(**args["model"])
         # ckpt_path = '/mnt/mmtech01/usr/liuwenzhuo/code/test-code/flexivit/ckpt/uniViT/3_add_random_resize-v2/last-v1.ckpt'
         ckpt_path = '/mnt/mmtech01/usr/liuwenzhuo/code/test-code/flexivit/ckpt/uniViT/3_add_random_resize2-v3/last.ckpt'
+        ckpt_path='/mnt/mmtech01/usr/liuwenzhuo/code/test-code/uniViT/ckpt/uniViT/no_random_resize/last.ckpt'
         model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=ckpt_path, strict=True, **args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
         val_transform = timm.data.create_transform(**data_config, is_training=False)
