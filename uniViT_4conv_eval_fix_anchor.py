@@ -102,7 +102,6 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def test_epoch_end(self, outputs):
         if self.results_path:
-            import pdb;pdb.set_trace()
             # 计算每个acc并乘以100
             acc_0 = self.acc_0.compute().detach().cpu().item() * 100
             acc_1 = self.acc_1.compute().detach().cpu().item() * 100
@@ -234,7 +233,7 @@ if __name__ == "__main__":
 
 
 
-    results_path = f"{args.ckpt_path.split('/')[-2]}_fix_anchor.csv"
+    results_path = f"./{args.ckpt_path.split('/')[-2]}_fix_anchor.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
