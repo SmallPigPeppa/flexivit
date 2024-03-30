@@ -77,20 +77,6 @@ class ClassificationEvaluator(pl.LightningModule):
         # modified
         self.modified(new_image_size=self.image_size, new_patch_size=self.patch_size)
 
-    # def forward(self, x):
-    #     return self.net(x)
-
-    # def training_step_old(self, batch, batch_idx):
-    #     x, y = batch
-    #     logits = self(x)
-    #     loss = self.loss_fn(logits, y)
-    #     acc = self.acc(logits, y)
-    #
-    #     # out dict
-    #     out_dict = {'loss': loss, 'train_loss': loss, 'train_acc': acc}
-    #     # Log
-    #     self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
-    #     return out_dict
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -121,7 +107,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.rand_ms_forward(x)
+        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.ms_forward(x)
         loss_4x4 = self.loss_fn(logits_4x4, y)
         acc_4x4 = self.acc(logits_4x4, y)
         loss_8x8 = self.loss_fn(logits_8x8, y)
@@ -194,9 +180,6 @@ class ClassificationEvaluator(pl.LightningModule):
                              list(self.patch_embed_12x12.parameters()) + \
                              list(self.patch_embed_16x16.parameters())
 
-        # params_to_optimize = list(self.patch_embed_56.parameters()) + \
-        #                      list(self.patch_embed_112.parameters())
-        # list(self.patch_embed_224.parameters())
 
         optimizer = torch.optim.SGD(
             params_to_optimize,
@@ -219,7 +202,6 @@ class ClassificationEvaluator(pl.LightningModule):
         )
         return [optimizer], [scheduler]
 
-        # return [optimizer]
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
@@ -340,35 +322,6 @@ class ClassificationEvaluator(pl.LightningModule):
         return new_patch_embed
 
 
-# if __name__ == "__main__":
-#     parser = LightningArgumentParser()
-#     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
-#     parser.add_lightning_class_args(ClassificationEvaluator, "model")
-#     parser.add_argument("--batch_size", type=int, default=256)
-#     parser.add_argument("--works", type=int, default=4)
-#     parser.add_argument("--root", type=str, default='./data')
-#     args = parser.parse_args()
-#     # args["logger"] = False  # Disable saving logging artifacts
-#     # wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
-#     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
-#     trainer = pl.Trainer.from_argparse_args(args)
-#     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
-#     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
-#     for image_size, patch_size in [(224, 16)]:
-#         args["model"].image_size = image_size
-#         args["model"].patch_size = patch_size
-#         model = ClassificationEvaluator(**args["model"])
-#         data_config = timm.data.resolve_model_data_config(model.net)
-#         val_transform = timm.data.create_transform(**data_config, is_training=False)
-#         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
-#         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
-#                                 shuffle=False, pin_memory=True)
-#         train_transform = timm.data.create_transform(**data_config, is_training=True)
-#         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
-#         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
-#                                   shuffle=True, pin_memory=True)
-#         # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-#         trainer.test(model, dataloaders=val_loader)
 
 if __name__ == "__main__":
     parser = LightningArgumentParser()
@@ -381,7 +334,7 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
     wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-4conv-fix14token', project='uniViT',
                                entity='pigpeppa', offline=False)
-    checkpoint_callback = ModelCheckpoint(monitor="val_acc_2", mode="max",
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
                                           dirpath='ckpt/uniViT/add_random_resize_4conv_fix14token', save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])

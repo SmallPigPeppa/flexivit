@@ -333,35 +333,6 @@ class ClassificationEvaluator(pl.LightningModule):
         return new_patch_embed
 
 
-# if __name__ == "__main__":
-#     parser = LightningArgumentParser()
-#     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
-#     parser.add_lightning_class_args(ClassificationEvaluator, "model")
-#     parser.add_argument("--batch_size", type=int, default=256)
-#     parser.add_argument("--works", type=int, default=4)
-#     parser.add_argument("--root", type=str, default='./data')
-#     args = parser.parse_args()
-#     # args["logger"] = False  # Disable saving logging artifacts
-#     # wandb_logger = WandbLogger(name='ft-all-param', project='uniViT', entity='pigpeppa', offline=False)
-#     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
-#     trainer = pl.Trainer.from_argparse_args(args)
-#     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
-#     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
-#     for image_size, patch_size in [(224, 16)]:
-#         args["model"].image_size = image_size
-#         args["model"].patch_size = patch_size
-#         model = ClassificationEvaluator(**args["model"])
-#         data_config = timm.data.resolve_model_data_config(model.net)
-#         val_transform = timm.data.create_transform(**data_config, is_training=False)
-#         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
-#         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
-#                                 shuffle=False, pin_memory=True)
-#         train_transform = timm.data.create_transform(**data_config, is_training=True)
-#         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
-#         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
-#                                   shuffle=True, pin_memory=True)
-#         # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-#         trainer.test(model, dataloaders=val_loader)
 
 if __name__ == "__main__":
     parser = LightningArgumentParser()
