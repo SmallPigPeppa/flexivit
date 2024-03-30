@@ -10,7 +10,7 @@ python vanilla_eval_resize_weight.py \
   --model.num_classes 1000 \
   --model.patch_size 16 \
   --model.image_size 224 \
-  --model.resize_type interpolate \
+  --model.resize_type pi \
   --model.results_path ./vanilla_resize_weight.csv
 
 
