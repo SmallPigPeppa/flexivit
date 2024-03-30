@@ -256,7 +256,7 @@ class ClassificationEvaluator(pl.LightningModule):
         x_4x4 = self.patch_embed_4x4(x_4x4, patch_size=patch_size_4x4)
 
         token_num_8x8 = 14
-        patch_size_8x8 = random.randint(6, 12)
+        patch_size_8x8 = random.randint(6, 10)
         img_size_8x8 = token_num_8x8 * patch_size_8x8
         x_8x8 = F.interpolate(x, size=(img_size_8x8, img_size_8x8), mode='bilinear')
         x_8x8 = self.patch_embed_8x8(x_8x8, patch_size=patch_size_8x8)
