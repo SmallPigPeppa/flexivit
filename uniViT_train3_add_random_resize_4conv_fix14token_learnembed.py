@@ -387,15 +387,15 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    # wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-4conv-fix14token_learnembed', project='uniViT',
-    #                            entity='pigpeppa', offline=False)
-    # checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-    #                                       dirpath='ckpt/uniViT/add_random_resize_4conv_fix14token_learnembed', save_top_k=1,
-    #                                       save_last=True)
-    # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
+    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-4conv-fix14token_learnembed', project='uniViT',
+                               entity='pigpeppa', offline=False)
+    checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
+                                          dirpath='ckpt/uniViT/add_random_resize_4conv_fix14token_learnembed', save_top_k=1,
+                                          save_last=True)
+    trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
     # lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
-    trainer = pl.Trainer.from_argparse_args(args)
+    # trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
     # [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10), (154, 11), (168, 12),
