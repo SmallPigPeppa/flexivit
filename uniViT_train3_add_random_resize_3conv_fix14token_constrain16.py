@@ -112,13 +112,14 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
-        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.ms_forward(x)
+        # logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.ms_forward(x)
+        logits_4x4, logits_8x8, logits_16x16 = self.ms_forward(x)
         loss_4x4 = self.loss_fn(logits_4x4, y)
         acc_4x4 = self.acc(logits_4x4, y)
         loss_8x8 = self.loss_fn(logits_8x8, y)
         acc_8x8 = self.acc(logits_8x8, y)
-        loss_12x12 = self.loss_fn(logits_12x12, y)
-        acc_12x12 = self.acc(logits_12x12, y)
+        # loss_12x12 = self.loss_fn(logits_12x12, y)
+        # acc_12x12 = self.acc(logits_12x12, y)
         loss_16x16 = self.loss_fn(logits_16x16, y)
         acc_16x16 = self.acc(logits_16x16, y)
 
@@ -127,17 +128,18 @@ class ClassificationEvaluator(pl.LightningModule):
         embed_16x16_origin = self.patch_embed_16x16_origin(x, patch_size=16)
         loss_constrain16 = F.mse_loss(embed_16x16, embed_16x16_origin)
 
-        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 + loss_constrain16 * 50.
+        # loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 + loss_constrain16 * 50.
+        loss = loss_4x4 + loss_8x8 + loss_16x16 + loss_constrain16 * 50.
 
         out_dict = {'val_loss': loss,
                     'val_loss_4x4': loss_4x4,
                     'val_loss_8x8': loss_8x8,
-                    'val_loss_12x12': loss_12x12,
+                    # 'val_loss_12x12': loss_12x12,
                     'val_loss_16x16': loss_16x16,
                     'val_loss_constrain16': loss_constrain16,
                     'val_acc_4x4': acc_4x4,
                     'val_acc_8x8': acc_8x8,
-                    'val_acc_12x12': acc_12x12,
+                    # 'val_acc_12x12': acc_12x12,
                     'val_acc_16x16': acc_16x16
                     }
         self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
@@ -260,7 +262,7 @@ class ClassificationEvaluator(pl.LightningModule):
         # 随机选择token数量，对应的分辨率是token数量乘以patch_size
         # random.choice([6, 8, 10])
         token_num_4x4 = 14
-        patch_size_4x4 = random.randint(2, 6)
+        patch_size_4x4 = random.randint(3, 5)
         img_size_4x4 = token_num_4x4 * patch_size_4x4
         x_4x4 = F.interpolate(x, size=(img_size_4x4, img_size_4x4), mode='bilinear')
         x_4x4 = self.patch_embed_4x4(x_4x4, patch_size=patch_size_4x4)
@@ -271,19 +273,21 @@ class ClassificationEvaluator(pl.LightningModule):
         x_8x8 = F.interpolate(x, size=(img_size_8x8, img_size_8x8), mode='bilinear')
         x_8x8 = self.patch_embed_8x8(x_8x8, patch_size=patch_size_8x8)
 
-        token_num_12x12 = 14
-        patch_size_12x12 = random.randint(10, 14)
-        img_size_12x12 = token_num_12x12 * patch_size_12x12
-        x_12x12 = F.interpolate(x, size=(img_size_12x12, img_size_12x12), mode='bilinear')
-        x_12x12 = self.patch_embed_12x12(x_12x12, patch_size=patch_size_12x12)
+        # token_num_12x12 = 14
+        # patch_size_12x12 = random.randint(10, 14)
+        # img_size_12x12 = token_num_12x12 * patch_size_12x12
+        # x_12x12 = F.interpolate(x, size=(img_size_12x12, img_size_12x12), mode='bilinear')
+        # x_12x12 = self.patch_embed_12x12(x_12x12, patch_size=patch_size_12x12)
 
         token_num_16x16 = 14
-        patch_size_16x16 = random.randint(14, 18)
+        patch_size_16x16 = random.randint(12, 20)
         img_size_16x16 = token_num_16x16 * patch_size_16x16
         x_16x16 = F.interpolate(x, size=(img_size_16x16, img_size_16x16), mode='bilinear')
         x_16x16 = self.patch_embed_16x16(x_16x16, patch_size=patch_size_16x16)
 
-        return self(x_4x4), self(x_8x8), self(x_12x12), self(x_16x16)
+        # return self(x_4x4), self(x_8x8), self(x_12x12), self(x_16x16)
+
+        return self(x_4x4), self(x_8x8),  self(x_16x16)
 
     def modified(self, new_image_size=224, new_patch_size=16):
         self.embed_args = {}
@@ -296,7 +300,7 @@ class ClassificationEvaluator(pl.LightningModule):
             self.embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
         self.patch_embed_4x4 = self.get_new_patch_embed(new_image_size=56, new_patch_size=4)
         self.patch_embed_8x8 = self.get_new_patch_embed(new_image_size=112, new_patch_size=8)
-        self.patch_embed_12x12 = self.get_new_patch_embed(new_image_size=168, new_patch_size=12)
+        # self.patch_embed_12x12 = self.get_new_patch_embed(new_image_size=168, new_patch_size=12)
         self.patch_embed_16x16 = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
         self.patch_embed_16x16_origin = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
         # import pdb;pdb.set_trace()
