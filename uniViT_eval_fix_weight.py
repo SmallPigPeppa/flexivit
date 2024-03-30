@@ -329,7 +329,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.patch_embed_56 = self.get_new_patch_embed(new_image_size=56, new_patch_size=4)
         self.patch_embed_112 = self.get_new_patch_embed(new_image_size=112, new_patch_size=8)
         self.patch_embed_224 = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
-        self.patch_embed = self.get_new_patch_embed(new_image_size=new_image_size, new_patch_size=new_patch_size)
+        self.patch_embed = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
         # import pdb;pdb.set_trace()
 
         self.net.patch_embed = nn.Identity()
