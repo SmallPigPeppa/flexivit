@@ -79,13 +79,14 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.rand_ms_forward(x)
+        # logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.rand_ms_forward(x)
+        logits_4x4, logits_8x8, logits_16x16 = self.ms_forward(x)
         loss_4x4 = self.loss_fn(logits_4x4, y)
         acc_4x4 = self.acc(logits_4x4, y)
         loss_8x8 = self.loss_fn(logits_8x8, y)
         acc_8x8 = self.acc(logits_8x8, y)
-        loss_12x12 = self.loss_fn(logits_12x12, y)
-        acc_12x12 = self.acc(logits_12x12, y)
+        # loss_12x12 = self.loss_fn(logits_12x12, y)
+        # acc_12x12 = self.acc(logits_12x12, y)
         loss_16x16 = self.loss_fn(logits_16x16, y)
         acc_16x16 = self.acc(logits_16x16, y)
 
@@ -94,16 +95,17 @@ class ClassificationEvaluator(pl.LightningModule):
         embed_16x16_origin = self.patch_embed_16x16_origin(x, patch_size=16)
         loss_constrain16 = F.mse_loss(embed_16x16, embed_16x16_origin)
 
-        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 + loss_constrain16 * 50.
+        # loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 + loss_constrain16 * 50.
+        loss = loss_4x4 + loss_8x8 +  loss_16x16 + loss_constrain16 * 50.
         out_dict = {'loss': loss,
                     'train_loss_4x4': loss_4x4,
                     'train_loss_8x8': loss_8x8,
-                    'train_loss_12x12': loss_12x12,
+                    # 'train_loss_12x12': loss_12x12,
                     'train_loss_16x16': loss_16x16,
                     'train_loss_constrain16': loss_constrain16,
                     'train_acc_4x4': acc_4x4,
                     'train_acc_8x8': acc_8x8,
-                    'train_acc_12x12': acc_12x12,
+                    # 'train_acc_12x12': acc_12x12,
                     'train_acc_16x16': acc_16x16
                     }
         # Log
@@ -345,11 +347,11 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-4conv-fix14token_constrain16',
+    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-3conv-fix14token_constrain16',
                                project='uniViT',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/uniViT/add_random_resize_4conv_fix14token_constrain16',
+                                          dirpath='ckpt/uniViT/add_random_resize_3conv_fix14token_constrain16',
                                           save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
