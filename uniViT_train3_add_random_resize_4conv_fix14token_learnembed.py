@@ -80,11 +80,11 @@ class ClassificationEvaluator(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         embed_4x4, embed_8x8, embed_12x12, embed_16x16 = self.rand_ms_embedding(x)
-        embed_16x16_origin = self.net._pos_embed(self.patch_embed_16x16_origin(x))
+        embed_16x16_origin = self.net._pos_embed(self.patch_embed_16x16_origin(x, patch_size=16))
 
-        print('embed_4x4.shape, embed_8x8.shape, embed_12x12.shape, embed_16x16.shape:', embed_4x4.shape, embed_8x8.shape, embed_12x12.shape, embed_16x16.shape)
-        print('embed_16x16_origin.shape:',embed_16x16_origin.shape)
-
+        # print('embed_4x4.shape, embed_8x8.shape, embed_12x12.shape, embed_16x16.shape:', embed_4x4.shape,
+        #       embed_8x8.shape, embed_12x12.shape, embed_16x16.shape)
+        # print('embed_16x16_origin.shape:', embed_16x16_origin.shape)
 
         loss_4x4 = F.mse_loss(embed_4x4, embed_16x16_origin)
         loss_8x8 = F.mse_loss(embed_8x8, embed_16x16_origin)
