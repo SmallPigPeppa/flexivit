@@ -246,6 +246,7 @@ if __name__ == "__main__":
         args["model"].patch_size = patch_size
         args["model"].results_path = results_path
         model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True, **args["model"])
+        import pdb;pdb.set_trace()
         data_config = timm.data.resolve_model_data_config(model.net)
         val_transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
