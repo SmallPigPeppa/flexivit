@@ -143,7 +143,9 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(args)
     # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
     #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
-    for image_size, patch_size in [(56, 4),(112, 8)]:
+    # for image_size, patch_size in [(56, 4),(112, 8)]:
+    for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10), (154, 11), (168, 12),
+     (182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
