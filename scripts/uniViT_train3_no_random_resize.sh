@@ -1,5 +1,5 @@
 python uniViT_train3_no_random_resize.py \
-  --max_epochs 15 \
+  --max_epochs 5 \
   --precision 16 \
   --accelerator gpu \
   --devices 8 \
