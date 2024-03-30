@@ -13,6 +13,7 @@ from flexivit_pytorch.utils import resize_abs_pos_embed
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
+
 class ClassificationEvaluator(pl.LightningModule):
     def __init__(
             self,
@@ -166,8 +167,9 @@ if __name__ == "__main__":
     # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     trainer = pl.Trainer.from_argparse_args(args)
 
-    for image_size, patch_size in [(32, 16), (48, 16), (64, 16), (80, 16), (96, 16), (112, 16), (128, 16), (144, 16),
-                                   (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
+    for image_size, patch_size in [(28, 16), (42, 16), (56, 16), (70, 16), (84, 16), (98, 16), (112, 16), (126, 16),
+                                   (140, 16), (154, 16), (168, 16), (182, 16), (196, 16), (210, 16), (224, 16),
+                                   (238, 16), (252, 16)]:
         args["model"].image_size = 224
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
