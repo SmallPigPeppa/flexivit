@@ -94,7 +94,7 @@ class ClassificationEvaluator(pl.LightningModule):
         embed_16x16_origin = self.patch_embed_16x16_origin(x, patch_size=16)
         loss_constrain16 = F.mse_loss(embed_16x16, embed_16x16_origin)
 
-        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 + loss_constrain16
+        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 + loss_constrain16 * 50.
         out_dict = {'loss': loss,
                     'train_loss_4x4': loss_4x4,
                     'train_loss_8x8': loss_8x8,
@@ -127,7 +127,7 @@ class ClassificationEvaluator(pl.LightningModule):
         embed_16x16_origin = self.patch_embed_16x16_origin(x, patch_size=16)
         loss_constrain16 = F.mse_loss(embed_16x16, embed_16x16_origin)
 
-        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 + loss_constrain16
+        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 + loss_constrain16 * 50.
 
         out_dict = {'val_loss': loss,
                     'val_loss_4x4': loss_4x4,
@@ -341,10 +341,12 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-4conv-fix14token_constrain16', project='uniViT',
+    wandb_logger = WandbLogger(name='ft-part-conv-uniViT-add-random-resize-4conv-fix14token_constrain16',
+                               project='uniViT',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/uniViT/add_random_resize_4conv_fix14token_constrain16', save_top_k=1,
+                                          dirpath='ckpt/uniViT/add_random_resize_4conv_fix14token_constrain16',
+                                          save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
     # lr_monitor = LearningRateMonitor(logging_interval="epoch")
