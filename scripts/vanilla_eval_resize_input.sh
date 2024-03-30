@@ -10,6 +10,6 @@ python vanilla_eval_resize_input.py \
   --model.num_classes 1000 \
   --model.patch_size 16 \
   --model.image_size 224 \
-  --model.results_path ./resize_input.csv
+  --model.results_path ./vanilla_resize_input.csv
 
 
