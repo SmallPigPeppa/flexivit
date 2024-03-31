@@ -164,21 +164,19 @@ class ClassificationEvaluator(pl.LightningModule):
         return x
 
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x_0 = F.interpolate(x, size=56, mode='bilinear')
-        x_0 = self.patch_embed_4x4(x, patch_size=self.patch_size)
+        x_0 = F.interpolate(x, size=56, mode='bilinear')
+        x_0 = self.patch_embed_4x4(x_0, patch_size=4)
 
-        # x_1 = F.interpolate(x, size=112, mode='bilinear')
-        x_1 = self.patch_embed_8x8(x, patch_size=self.patch_size)
+        x_1 = F.interpolate(x, size=112, mode='bilinear')
+        x_1 = self.patch_embed_8x8(x_1, patch_size=8)
 
         # x_2 = F.interpolate(x, size=168, mode='bilinear')
-        # x_2 = self.patch_embed_12x12(x, patch_size=self.patch_size)
+        # x_2 = self.patch_embed_12x12(x_2, patch_size=12)
 
-        # x_3 = F.interpolate(x, size=224, mode='bilinear')
-        x_3 = self.patch_embed_16x16(x, patch_size=self.patch_size)
+        x_3 = F.interpolate(x, size=224, mode='bilinear')
+        x_3 = self.patch_embed_16x16(x_3, patch_size=16)
 
-        # return self(x_0), self(x_1), self(x_2), self(x_3)
-
-        return self(x_0), self(x_1),  self(x_3)
+        return self(x_0), self(x_1), self(x_3)
 
     def modified(self, new_image_size=224, new_patch_size=16):
         self.embed_args = {}
@@ -235,7 +233,7 @@ if __name__ == "__main__":
 
 
 
-    results_path = f"./{args.ckpt_path.split('/')[-2]}_fix_14token.csv"
+    results_path = f"./{args.ckpt_path.split('/')[-2]}_fix_anchor.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
