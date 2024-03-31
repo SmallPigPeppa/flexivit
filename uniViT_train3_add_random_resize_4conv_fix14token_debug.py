@@ -91,7 +91,7 @@ class ClassificationEvaluator(pl.LightningModule):
         acc_8x8 = self.acc_1(logits_8x8, y)
 
         loss_12x12 = self.loss_fn(logits_12x12, y)
-        acc_12x12 = self.acc(logits_12x12, y)
+        acc_12x12 = self.acc_2(logits_12x12, y)
 
         # loss_16x16 = self.loss_fn(logits_16x16, y)
         # acc_16x16 = self.acc_2(logits_16x16, y)
@@ -127,10 +127,10 @@ class ClassificationEvaluator(pl.LightningModule):
         acc_8x8 = self.acc_1(logits_8x8, y)
 
         loss_12x12 = self.loss_fn(logits_12x12, y)
-        acc_12x12 = self.acc(logits_12x12, y)
+        acc_12x12 = self.acc_2(logits_12x12, y)
 
         loss_16x16 = self.loss_fn(logits_16x16, y)
-        acc_16x16 = self.acc_2(logits_16x16, y)
+        acc_16x16 = self.acc_3(logits_16x16, y)
 
 
         # loss = loss_4x4 + loss_8x8 + loss_16x16
