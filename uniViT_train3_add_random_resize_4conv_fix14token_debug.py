@@ -72,6 +72,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.acc_0 = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
         self.acc_1 = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
         self.acc_2 = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
+        self.acc_3 = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
 
         # Define loss
         self.loss_fn = CrossEntropyLoss()
