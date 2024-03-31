@@ -1,5 +1,6 @@
 #ckpt_path=ckpt/uniViT/no-random-resize-4conv/last.ckpt
-ckpt_path=ckpt/uniViT/add_random_resize_4conv_fix14token/last.ckpt
+#ckpt_path=ckpt/uniViT/add_random_resize_4conv_fix14token/last.ckpt
+ckpt_path=ckpt/uniViT/add_random_resize_4conv_fix14token_learnembed/last.ckpt
 
 
 python uniViT_4conv_eval_fix_14token.py \
