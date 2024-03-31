@@ -1,4 +1,4 @@
-python uniViT_train3_add_random_resize_3conv_fix14token_constrain16.py \
+python uniViT_train3_add_random_resize_3conv_fix14token_constrain16_26.py \
   --max_epochs 5 \
   --precision 16 \
   --accelerator gpu \
