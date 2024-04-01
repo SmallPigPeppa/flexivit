@@ -205,18 +205,6 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.forward_head(x)
         return x
 
-    # def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
-    #     x_4x4 = F.interpolate(x, size=56, mode='bilinear')
-    #     x_4x4 = self.patch_embed_4x4(x_4x4, patch_size=4)
-    #
-    #     x_8x8 = F.interpolate(x, size=112, mode='bilinear')
-    #     x_8x8 = self.patch_embed_8x8(x_8x8, patch_size=8)
-    #
-    #     x_16x16 = F.interpolate(x, size=224, mode='bilinear')
-    #     x_16x16 = self.patch_embed_16x16(x_16x16, patch_size=16)
-    #
-    #
-    #     return self(x_4x4), self(x_8x8), self(x_16x16)
 
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         x_4x4 = F.interpolate(x, size=56, mode='bilinear')
@@ -233,30 +221,6 @@ class ClassificationEvaluator(pl.LightningModule):
 
         return self(x_4x4), self(x_8x8), self(x_12x12), self(x_16x16)
 
-    # def rand_ms_forward(self, x: torch.Tensor) -> torch.Tensor:
-    #     # 随机选择token数量，对应的分辨率是token数量乘以patch_size
-    #     # random.choice([6, 8, 10])
-    #     token_num_4x4 = 14
-    #     patch_size_4x4 = random.randint(2, 6)
-    #     img_size_4x4 = token_num_4x4 * patch_size_4x4
-    #     x_4x4 = F.interpolate(x, size=(img_size_4x4, img_size_4x4), mode='bilinear')
-    #     x_4x4 = self.patch_embed_4x4(x_4x4, patch_size=patch_size_4x4)
-    #
-    #     token_num_8x8 = 14
-    #     patch_size_8x8 = random.randint(6, 10)
-    #     img_size_8x8 = token_num_8x8 * patch_size_8x8
-    #     x_8x8 = F.interpolate(x, size=(img_size_8x8, img_size_8x8), mode='bilinear')
-    #     x_8x8 = self.patch_embed_8x8(x_8x8, patch_size=patch_size_8x8)
-    #
-    #
-    #     token_num_16x16 = 14
-    #     patch_size_16x16 = random.randint(12, 20)
-    #     img_size_16x16 = token_num_16x16 * patch_size_16x16
-    #     x_16x16 = F.interpolate(x, size=(img_size_16x16, img_size_16x16), mode='bilinear')
-    #     x_16x16 = self.patch_embed_16x16(x_16x16, patch_size=patch_size_16x16)
-    #
-    #
-    #     return self(x_4x4), self(x_8x8), self(x_16x16)
 
     def rand_ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         # 随机选择token数量，对应的分辨率是token数量乘以patch_size
