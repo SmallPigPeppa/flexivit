@@ -274,7 +274,7 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
-    wandb_logger = WandbLogger(name='add-random-resize-3conv-fix14token-rmrand224-25',
+    wandb_logger = WandbLogger(name='add-random-resize-3conv-fix14token-rmrand224-35',
                                project='L2P',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
