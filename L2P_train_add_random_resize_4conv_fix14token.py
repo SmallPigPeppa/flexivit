@@ -333,7 +333,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token', project='uniViT',
+    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token', project='L2P',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
                                           dirpath='ckpt/L2P/add_random_resize_4conv_fix14token', save_top_k=1,
