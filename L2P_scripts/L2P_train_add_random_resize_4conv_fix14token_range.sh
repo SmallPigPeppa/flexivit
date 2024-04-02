@@ -1,4 +1,4 @@
-python L2P_train_add_random_resize_4conv_fix14token_range2.py \
+python L2P_train_add_random_resize_4conv_fix14token_2range.py \
   --max_epochs 5 \
   --precision 16 \
   --accelerator gpu \
@@ -14,7 +14,7 @@ python L2P_train_add_random_resize_4conv_fix14token_range2.py \
   --model.results_path ./resize_weight.csv
 
 
-python L2P_train_add_random_resize_4conv_fix14token_range1.5.py \
+python L2P_train_add_random_resize_4conv_fix14token_1.5range.py \
   --max_epochs 5 \
   --precision 16 \
   --accelerator gpu \
