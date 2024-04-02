@@ -1,6 +1,5 @@
 ckpt_paths=(
-    "ckpt/L2P/add_random_resize_4conv_fix14token_rmrand224/last.ckpt"
-    "ckpt/L2P/add_random_resize_4conv_fix14token/last.ckpt"
+    "ckpt/L2P/add_random_resize_4conv_fix14token_24816/last.ckpt"
 )
 
 scripts=(
