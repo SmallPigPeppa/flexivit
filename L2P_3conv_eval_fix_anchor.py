@@ -67,7 +67,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.acc_0 = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
         self.acc_1 = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
         self.acc_2 = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
-        self.acc_3 = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
+        # self.acc_3 = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
 
         # Define loss
         self.loss_fn = CrossEntropyLoss()
@@ -80,13 +80,13 @@ class ClassificationEvaluator(pl.LightningModule):
         x = F.interpolate(x, size=self.image_size, mode='bilinear')
 
         # Pass through network
-        pred0, pred1, pred2, pred3 = self.ms_forward(x)
+        pred0, pred1, pred2 = self.ms_forward(x)
 
         # Get accuracy
         acc_0 = self.acc_0(pred0, y)
         acc_1 = self.acc_1(pred1, y)
         acc_2 = self.acc_2(pred2, y)
-        acc_3 = self.acc_3(pred3, y)
+        # acc_3 = self.acc_3(pred3, y)
 
         # Log
         out_dict = {
@@ -94,7 +94,7 @@ class ClassificationEvaluator(pl.LightningModule):
             'test_acc_0': acc_0,
             'test_acc_1': acc_1,
             'test_acc_2': acc_2,
-            'test_acc_3': acc_3
+            # 'test_acc_3': acc_3
         }
         self.log_dict(out_dict, sync_dist=True, on_epoch=True)
 
@@ -106,8 +106,8 @@ class ClassificationEvaluator(pl.LightningModule):
             acc_0 = self.acc_0.compute().detach().cpu().item() * 100
             acc_1 = self.acc_1.compute().detach().cpu().item() * 100
             acc_2 = self.acc_2.compute().detach().cpu().item() * 100
-            acc_3 = self.acc_3.compute().detach().cpu().item() * 100
-            max_acc = max(acc_0, acc_1, acc_2, acc_3)
+            # acc_3 = self.acc_3.compute().detach().cpu().item() * 100
+            max_acc = max(acc_0, acc_1, acc_2)
 
             # 确保所有进程都执行到这里，但只有主进程进行写入操作
             if self.trainer.is_global_zero:
@@ -121,7 +121,7 @@ class ClassificationEvaluator(pl.LightningModule):
                         results_df[column_name] = [None] * len(results_df)  # 先添加空列，防止DataFrame对齐问题
                 else:
                     # 结果文件不存在，创建新的DataFrame，此时有5行
-                    results_df = pd.DataFrame(columns=[column_name], index=['acc0', 'acc1', 'acc2', 'acc3', 'max_acc'])
+                    results_df = pd.DataFrame(columns=[column_name], index=['acc0', 'acc1', 'acc2',  'max_acc'])
                     # 确保目录存在
                     os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
 
@@ -129,7 +129,7 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.at['acc0', column_name] = acc_0
                 results_df.at['acc1', column_name] = acc_1
                 results_df.at['acc2', column_name] = acc_2
-                results_df.at['acc3', column_name] = acc_3
+                # results_df.at['acc3', column_name] = acc_3
                 results_df.at['max_acc', column_name] = max_acc
 
                 # 保存更新后的结果
@@ -164,19 +164,19 @@ class ClassificationEvaluator(pl.LightningModule):
         return x
 
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x_0 = F.interpolate(x, size=56, mode='bilinear')
-        x_0 = self.patch_embed_4x4(x, patch_size=self.patch_size)
+        x_0 = F.interpolate(x, size=56, mode='bilinear')
+        x_0 = self.patch_embed_4x4(x_0, patch_size=4)
 
-        # x_1 = F.interpolate(x, size=112, mode='bilinear')
-        x_1 = self.patch_embed_8x8(x, patch_size=self.patch_size)
+        x_1 = F.interpolate(x, size=112, mode='bilinear')
+        x_1 = self.patch_embed_8x8(x_1, patch_size=8)
 
         # x_2 = F.interpolate(x, size=168, mode='bilinear')
-        x_2 = self.patch_embed_12x12(x, patch_size=self.patch_size)
+        # x_2 = self.patch_embed_12x12(x_2, patch_size=12)
 
-        # x_3 = F.interpolate(x, size=224, mode='bilinear')
-        x_3 = self.patch_embed_16x16(x, patch_size=self.patch_size)
+        x_3 = F.interpolate(x, size=224, mode='bilinear')
+        x_3 = self.patch_embed_16x16(x_3, patch_size=16)
 
-        return self(x_0), self(x_1), self(x_2), self(x_3)
+        return self(x_0), self(x_1), self(x_3)
 
     def modified(self, new_image_size=224, new_patch_size=16):
         self.embed_args = {}
@@ -189,7 +189,7 @@ class ClassificationEvaluator(pl.LightningModule):
             self.embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
         self.patch_embed_4x4 = self.get_new_patch_embed(new_image_size=56, new_patch_size=4)
         self.patch_embed_8x8 = self.get_new_patch_embed(new_image_size=112, new_patch_size=8)
-        self.patch_embed_12x12 = self.get_new_patch_embed(new_image_size=192, new_patch_size=12)
+        # self.patch_embed_12x12 = self.get_new_patch_embed(new_image_size=192, new_patch_size=12)
         self.patch_embed_16x16 = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
         self.patch_embed_16x16_origin = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
         # import pdb;pdb.set_trace()
@@ -233,7 +233,7 @@ if __name__ == "__main__":
 
 
 
-    results_path = f"./L2P_exp/{args.ckpt_path.split('/')[-2]}_fix_14token.csv"
+    results_path = f"./L2P_exp/{args.ckpt_path.split('/')[-2]}_fix_anchor.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')

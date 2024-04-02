@@ -233,7 +233,7 @@ if __name__ == "__main__":
 
 
 
-    results_path = f"./L2P_{args.ckpt_path.split('/')[-2]}_fix_anchor.csv"
+    results_path = f"./L2P_exp/{args.ckpt_path.split('/')[-2]}_fix_anchor.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
