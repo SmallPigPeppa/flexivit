@@ -165,16 +165,16 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         # x_0 = F.interpolate(x, size=56, mode='bilinear')
-        x_0 = self.patch_embed_4x4(x, patch_size=[self.patch_size_0,self.patch_size_1])
+        x_0 = self.patch_embed_4x4(x, patch_size=[self.patch_size_0, self.patch_size_1])
 
         # x_1 = F.interpolate(x, size=112, mode='bilinear')
-        x_1 = self.patch_embed_8x8(x, patch_size=[self.patch_size_0,self.patch_size_1])
+        x_1 = self.patch_embed_8x8(x, patch_size=[self.patch_size_0, self.patch_size_1])
 
         # x_2 = F.interpolate(x, size=168, mode='bilinear')
-        x_2 = self.patch_embed_12x12(x, patch_size=[self.patch_size_0,self.patch_size_1])
+        x_2 = self.patch_embed_12x12(x, patch_size=[self.patch_size_0, self.patch_size_1])
 
         # x_3 = F.interpolate(x, size=224, mode='bilinear')
-        x_3 = self.patch_embed_16x16(x, patch_size=[self.patch_size_0,self.patch_size_1])
+        x_3 = self.patch_embed_16x16(x, patch_size=[self.patch_size_0, self.patch_size_1])
 
         return self(x_0), self(x_1), self(x_2), self(x_3)
 
@@ -231,15 +231,16 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
     trainer = pl.Trainer.from_argparse_args(args)
 
-    results_path = f"./L2P_exp_ratio/{args.ckpt_path.split('/')[-2]}_fix_14token.csv"
+    results_path = f"./L2P_exp_ratio/{args.ckpt_path.split('/')[-2]}_fix_14token_ratio.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
         os.remove(results_path)
 
-    for patch_size_0, patch_size_1 in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10),
-                                   (154, 11), (168, 12), (182, 13), (196, 14), (210, 15), (224, 16), (238, 17),
-                                   (252, 18)]:
+    for patch_size_0, patch_size_1 in [(4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (8, 4), (8, 6), (8, 8),
+                                       (8, 10), (8, 12), (8, 14), (8, 16), (12, 6), (12, 9), (12, 12), (12, 15),
+                                       (12, 18), (12, 21), (12, 24), (16, 8), (16, 12), (16, 16), (16, 20), (16, 24),
+                                       (16, 28), (16, 32)]:
         args["model"].image_size = 224
         args["model"].patch_size = 16
         args["model"].results_path = results_path
