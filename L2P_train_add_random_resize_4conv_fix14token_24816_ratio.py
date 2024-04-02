@@ -96,9 +96,9 @@ class ClassificationEvaluator(pl.LightningModule):
                     'train_loss_8x8': loss_8x8,
                     'train_loss_12x12': loss_12x12,
                     'train_loss_16x16': loss_16x16,
-                    'train_acc_2x2': acc_4x4,
-                    'train_acc_4x4': acc_8x8,
-                    'train_acc_8x8': acc_12x12,
+                    'train_acc_4x4': acc_4x4,
+                    'train_acc_8x8': acc_8x8,
+                    'train_acc_12x12': acc_12x12,
                     'train_acc_16x16': acc_16x16
                     }
         # Log
@@ -123,9 +123,9 @@ class ClassificationEvaluator(pl.LightningModule):
                     'val_loss_8x8': loss_8x8,
                     'val_loss_12x12': loss_12x12,
                     'val_loss_16x16': loss_16x16,
-                    'val_acc_2x2': acc_4x4,
-                    'val_acc_4x4': acc_8x8,
-                    'val_acc_8x8': acc_12x12,
+                    'val_acc_4x4': acc_4x4,
+                    'val_acc_8x8': acc_8x8,
+                    'val_acc_12x12': acc_12x12,
                     'val_acc_16x16': acc_16x16
                     }
         self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
@@ -333,10 +333,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token-24816', project='L2P',
+    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token-24816-ratio', project='L2P',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/L2P/add_random_resize_4conv_fix14token_24816', save_top_k=1,
+                                          dirpath='ckpt/L2P/add_random_resize_4conv_fix14token_24816_ratio', save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
     # lr_monitor = LearningRateMonitor(logging_interval="epoch")
