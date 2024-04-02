@@ -1,8 +1,13 @@
+#ckpt_paths=(
+#    "ckpt/L2P/add_random_resize_3conv_fix14token/last.ckpt"
+#    "ckpt/L2P/add_random_resize_3conv_fix14token_rmrand224/last.ckpt"
+#    "ckpt/L2P/add_random_resize_3conv_fix14token_rmrand224_35/last.ckpt"
+#)
+
 ckpt_paths=(
-    "ckpt/L2P/add_random_resize_3conv_fix14token/last.ckpt"
-    "ckpt/L2P/add_random_resize_3conv_fix14token_rmrand224/last.ckpt"
-    "ckpt/L2P/add_random_resize_3conv_fix14token_rmrand224_35/last.ckpt"
+    "ckpt/L2P/add_random_resize_3conv_fix14token_35/last.ckpt"
 )
+
 
 scripts=(
     "L2P_3conv_eval_fix_14token.py"
