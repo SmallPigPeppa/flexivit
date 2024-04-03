@@ -100,6 +100,7 @@ class ClassificationEvaluator(pl.LightningModule):
         }
         self.log_dict(out_dict, sync_dist=True, on_epoch=True)
 
+
         return out_dict
 
     def test_epoch_end(self, outputs):
