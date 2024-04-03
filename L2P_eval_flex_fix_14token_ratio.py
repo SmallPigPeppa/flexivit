@@ -83,20 +83,13 @@ class ClassificationEvaluator(pl.LightningModule):
         pred = self.origin_forward(x)
 
         # Get accuracy
-        acc_0 = self.acc_0(pred0, y)
-        acc_1 = self.acc_1(pred1, y)
-        acc_2 = self.acc_2(pred2, y)
-        acc_3 = self.acc_3(pred3, y)
-
+        acc = self.acc(pred, y)
         # Log
         out_dict = {
             # 'res': str([self.patch_size_0 * 14, self.patch_size_1 * 14]),
             'patch_size_0': self.patch_size_0,
             'patch_size_1': self.patch_size_1,
-            'test_acc_0': acc_0,
-            'test_acc_1': acc_1,
-            'test_acc_2': acc_2,
-            'test_acc_3': acc_3
+            'test_acc': acc,
         }
         self.log_dict(out_dict, sync_dist=True, on_epoch=True)
 
@@ -105,11 +98,9 @@ class ClassificationEvaluator(pl.LightningModule):
     def test_epoch_end(self, outputs):
         if self.results_path:
             # 计算每个acc并乘以100
-            acc_0 = self.acc_0.compute().detach().cpu().item() * 100
-            acc_1 = self.acc_1.compute().detach().cpu().item() * 100
-            acc_2 = self.acc_2.compute().detach().cpu().item() * 100
-            acc_3 = self.acc_3.compute().detach().cpu().item() * 100
-            max_acc = max(acc_0, acc_1, acc_2, acc_3)
+
+            acc = self.acc.compute().detach().cpu().item() * 100
+
 
             # 确保所有进程都执行到这里，但只有主进程进行写入操作
             if self.trainer.is_global_zero:
@@ -123,16 +114,12 @@ class ClassificationEvaluator(pl.LightningModule):
                         results_df[column_name] = [None] * len(results_df)  # 先添加空列，防止DataFrame对齐问题
                 else:
                     # 结果文件不存在，创建新的DataFrame，此时有5行
-                    results_df = pd.DataFrame(columns=[column_name], index=['acc0', 'acc1', 'acc2', 'acc3', 'max_acc'])
+                    results_df = pd.DataFrame(columns=[column_name], index=['acc'])
                     # 确保目录存在
                     os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
 
                 # 更新DataFrame中的值
-                results_df.at['acc0', column_name] = acc_0
-                results_df.at['acc1', column_name] = acc_1
-                results_df.at['acc2', column_name] = acc_2
-                results_df.at['acc3', column_name] = acc_3
-                results_df.at['max_acc', column_name] = max_acc
+                results_df.at['acc', column_name] = acc
 
                 # 保存更新后的结果
                 results_df.to_csv(self.results_path)
