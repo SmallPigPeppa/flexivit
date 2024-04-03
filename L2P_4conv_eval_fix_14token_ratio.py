@@ -90,7 +90,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Log
         out_dict = {
-            'res': [self.patch_size_0 * 14, self.patch_size_1 * 14],
+            'res': str([self.patch_size_0 * 14, self.patch_size_1 * 14]),
             'patch_size_0': self.patch_size_0,
             'patch_size_1': self.patch_size_1,
             'test_acc_0': acc_0,
