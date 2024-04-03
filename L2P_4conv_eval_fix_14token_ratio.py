@@ -114,7 +114,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
             # 确保所有进程都执行到这里，但只有主进程进行写入操作
             if self.trainer.is_global_zero:
-                column_name = f"{self.patch_size0}_{self.patch_size1}"
+                column_name = f"{self.patch_size_0}_{self.patch_size_1}"
 
                 if os.path.exists(self.results_path):
                     # 结果文件已存在，读取现有数据
