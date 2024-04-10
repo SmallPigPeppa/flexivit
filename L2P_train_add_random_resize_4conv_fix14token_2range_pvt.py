@@ -281,9 +281,9 @@ class ClassificationEvaluator(pl.LightningModule):
         self.embed_dim = self.net.num_features
         self.pre_norm = False
         self.dynamic_img_pad = False
-        if self.net.dynamic_img_size:
-            # flatten deferred until after pos embed
-            self.embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
+        # if self.net.dynamic_img_size:
+        #     # flatten deferred until after pos embed
+        #     self.embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
         self.patch_embed_4x4 = self.get_new_patch_embed(new_image_size=56, new_patch_size=4)
         self.patch_embed_8x8 = self.get_new_patch_embed(new_image_size=112, new_patch_size=8)
         self.patch_embed_12x12 = self.get_new_patch_embed(new_image_size=168, new_patch_size=12)
