@@ -7,7 +7,7 @@ python L2P_train_add_random_resize_4conv_fix14token_2range_ratio_pvt.py \
   --batch_size 32 \
   --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --model.resize_type pi \
-  --model.weights deit_base_distilled_patch16_224.fb_in1k \
+  --model.weights pvt_v2_b3.in1k \
   --model.num_classes 1000 \
   --model.patch_size 16 \
   --model.image_size 224 \
