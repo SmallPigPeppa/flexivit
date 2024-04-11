@@ -66,7 +66,7 @@ class ClassificationEvaluator(pl.LightningModule):
         x, y = batch
 
         # TODO: fix it
-        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.ms_forward(x)
+        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.rand_ms_forward(x)
         loss_4x4 = self.loss_fn(logits_4x4, y)
         acc_4x4 = self.acc(logits_4x4, y)
         loss_8x8 = self.loss_fn(logits_8x8, y)
@@ -230,19 +230,19 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def rand_ms_forward(self, x: torch.Tensor) -> torch.Tensor:
         # 随机选择imagesize
-        img_size_3x3 = random.choice([28, 42, 56, 70, 84])
+        img_size_3x3 = random.choice([28, 42, 56])
         x_3x3 = F.interpolate(x, size=(img_size_3x3, img_size_3x3), mode='bilinear')
         x_3x3, size_3x3 = self.patch_embed_3x3_s1(x_3x3, patch_size=3, stride=1)
 
-        img_size_5x5 = random.choice([84, 98, 112, 126, 140])
+        img_size_5x5 = random.choice([84, 98, 112])
         x_5x5 = F.interpolate(x, size=(img_size_5x5, img_size_5x5), mode='bilinear')
         x_5x5, size_5x5 = self.patch_embed_5x5_s2(x_5x5, patch_size=5, stride=2)
 
-        img_size_7x7 = random.choice([140, 154, 168, 182, 196])
+        img_size_7x7 = random.choice([140, 154, 168])
         x_7x7 = F.interpolate(x, size=(img_size_7x7, img_size_7x7), mode='bilinear')
         x_7x7, size_7x7 = self.patch_embed_7x7_s3(x_7x7, patch_size=7, stride=3)
 
-        img_size_7x7_s4 = random.choice([196, 210, 224, 238, 252])
+        img_size_7x7_s4 = random.choice([196, 210, 224])
         x_7x7_s4 = F.interpolate(x, size=(img_size_7x7_s4, img_size_7x7_s4), mode='bilinear')
         x_7x7_s4, size_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
 
