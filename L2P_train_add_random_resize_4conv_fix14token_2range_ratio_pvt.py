@@ -51,18 +51,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Load original weights
         print(f"Loading weights {self.weights}")
-        orig_net = create_model(self.weights, pretrained=True)
-        # self.net = create_model(self.weights, pretrained=True)
-        state_dict = orig_net.state_dict()
-        self.origin_state_dict = state_dict
-        model_fn = getattr(timm.models, orig_net.default_cfg["architecture"])
-        self.net = model_fn(
-            # img_size=224,
-            # patch_size=16,
-            num_classes=self.num_classes,
-            # dynamic_img_size=True
-        ).to(self.device)
-        self.net.load_state_dict(state_dict, strict=True)
+        self.net = create_model(weights, pretrained=True)
 
         # Define metrics
         self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)

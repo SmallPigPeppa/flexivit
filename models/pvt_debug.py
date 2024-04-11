@@ -128,34 +128,16 @@ m = ClassificationEvaluator()
 
 
 x = torch.rand(size=(1, 3, 224, 224))
-x3 = m.forward(x)
-print(x3.shape)
+x3 = m.ms_forward(x)
+print(len(x3))
+print(x3[0].shape)
 
-x = torch.rand(size=(1, 3, 56, 56))
-x4 = m.ms_forward(x)
-print(x4.shape)
+# x = torch.rand(size=(1, 3, 56, 56))
+# x4 = m.ms_forward(x)
+# print(x4.shape)
+#
+# x = torch.rand(size=(1, 3, 112, 112))
+# x5 = m.ms_forward(x)
+# print(x5.shape)
 
-x = torch.rand(size=(1, 3, 112, 112))
-x5 = m.ms_forward(x)
-print(x5.shape)
 
-
-class OverlapPatchEmbed(nn.Module):
-    """ Image to Patch Embedding
-    """
-
-    def __init__(self, patch_size=7, stride=4, in_chans=3, embed_dim=768):
-        super().__init__()
-        patch_size = to_2tuple(patch_size)
-        assert max(patch_size) > stride, "Set larger patch_size than stride"
-        self.patch_size = patch_size
-        self.proj = nn.Conv2d(
-            in_chans, embed_dim, patch_size,
-            stride=stride, padding=(patch_size[0] // 2, patch_size[1] // 2))
-        self.norm = nn.LayerNorm(embed_dim)
-
-    def forward(self, x):
-        x = self.proj(x)
-        x = x.permute(0, 2, 3, 1)
-        x = self.norm(x)
-        return x
