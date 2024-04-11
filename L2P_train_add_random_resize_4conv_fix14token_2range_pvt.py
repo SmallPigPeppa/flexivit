@@ -10,18 +10,14 @@ from torch.nn import CrossEntropyLoss
 from torchmetrics.classification.accuracy import Accuracy
 import torch.nn.functional as F
 from flexivit_pytorch import (interpolate_resize_patch_embed, pi_resize_patch_embed)
-from flexivit_pytorch.utils import resize_abs_pos_embed
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from pytorch_lightning.loggers import WandbLogger
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
-from timm.models._manipulate import checkpoint_seq
-
-from timm.layers import PatchEmbed
 import torch.nn as nn
-from models.flex_patch_embed import FlexiPatchEmbed
 import random
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
+from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -55,18 +51,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Load original weights
         print(f"Loading weights {self.weights}")
-        orig_net = create_model(self.weights, pretrained=True)
-        # self.net = create_model(self.weights, pretrained=True)
-        state_dict = orig_net.state_dict()
-        self.origin_state_dict = state_dict
-        model_fn = getattr(timm.models, orig_net.default_cfg["architecture"])
-        self.net = model_fn(
-            # img_size=224,
-            # patch_size=16,
-            num_classes=self.num_classes,
-            # dynamic_img_size=True
-        ).to(self.device)
-        self.net.load_state_dict(state_dict, strict=True)
+        self.net = create_model(weights, pretrained=True)
 
         # Define metrics
         self.acc = Accuracy(num_classes=self.num_classes, task="multiclass", top_k=1)
@@ -75,8 +60,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.loss_fn = CrossEntropyLoss()
 
         # modified
-        self.modified(new_image_size=self.image_size, new_patch_size=self.patch_size)
-
+        self.modified()
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -180,7 +164,6 @@ class ClassificationEvaluator(pl.LightningModule):
                              list(self.patch_embed_12x12.parameters()) + \
                              list(self.patch_embed_16x16.parameters())
 
-
         optimizer = torch.optim.SGD(
             params_to_optimize,
             lr=self.lr,
@@ -202,126 +185,84 @@ class ClassificationEvaluator(pl.LightningModule):
         )
         return [optimizer], [scheduler]
 
-
-    def forward_features(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.net.patch_embed(x)
-        x = self.net._pos_embed(x)
-        x = self.net.patch_drop(x)
-        x = self.net.norm_pre(x)
-        if self.net.grad_checkpointing and not torch.jit.is_scripting():
-            x = checkpoint_seq(self.net.blocks, x)
-        else:
-            x = self.net.blocks(x)
-        x = self.net.norm(x)
+    def forward(self, x):
+        x = self.net.forward_features(x)
+        x = self.net.forward_head(x)
         return x
 
-    def forward_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
-        if self.net.attn_pool is not None:
-            x = self.net.attn_pool(x)
-        elif self.net.global_pool == 'avg':
-            x = x[:, self.net.num_prefix_tokens:].mean(dim=1)
-        elif self.net.global_pool:
-            x = x[:, 0]  # class token
-        x = self.net.fc_norm(x)
-        x = self.net.head_drop(x)
-        return x if pre_logits else self.net.head(x)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.forward_features(x)
-        x = self.forward_head(x)
+    def forward_after_patch_embed(self, x):
+        x = self.net.stages(x)
+        x = self.net.forward_head(x)
         return x
 
-    def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
-        x_4x4 = F.interpolate(x, size=56, mode='bilinear')
-        x_4x4 = self.patch_embed_4x4(x_4x4, patch_size=4)
+    def ms_forward(self, x):
+        x_3x3 = F.interpolate(x, size=56, mode='bilinear')
+        x_3x3 = self.patch_embed_3x3_s1(x_3x3, patch_size=3, stride=1)
 
-        x_8x8 = F.interpolate(x, size=112, mode='bilinear')
-        x_8x8 = self.patch_embed_8x8(x_8x8, patch_size=8)
+        x_5x5 = F.interpolate(x, size=112, mode='bilinear')
+        x_5x5 = self.patch_embed_5x5_s2(x_5x5, patch_size=5, stride=2)
 
-        x_12x12 = F.interpolate(x, size=168, mode='bilinear')
-        x_12x12 = self.patch_embed_12x12(x_12x12, patch_size=12)
+        x_7x7 = F.interpolate(x, size=168, mode='bilinear')
+        x_7x7 = self.patch_embed_7x7_s3(x_7x7, patch_size=7, stride=3)
 
-        x_16x16 = F.interpolate(x, size=224, mode='bilinear')
-        x_16x16 = self.patch_embed_16x16(x_16x16, patch_size=16)
+        x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
+        x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
 
-        return self(x_4x4), self(x_8x8), self(x_12x12), self(x_16x16)
+        return self.forward_after_patch_embed(x_3x3), \
+            self.forward_after_patch_embed(x_5x5), \
+            self.forward_after_patch_embed(x_7x7), \
+            self.forward_after_patch_embed(x_7x7_s4)
+
 
     def rand_ms_forward(self, x: torch.Tensor) -> torch.Tensor:
-        # 随机选择token数量，对应的分辨率是token数量乘以patch_size
-        # random.choice([6, 8, 10])
-        token_num_4x4 = 14
-        patch_size_4x4 = random.randint(2, 8)
-        img_size_4x4 = token_num_4x4 * patch_size_4x4
-        x_4x4 = F.interpolate(x, size=(img_size_4x4, img_size_4x4), mode='bilinear')
-        x_4x4 = self.patch_embed_4x4(x_4x4, patch_size=patch_size_4x4)
+        # 随机选择imagesize
+        img_size_3x3 = random.choice([28, 42, 56, 70, 84])
+        x_3x3 = F.interpolate(x, size=(img_size_3x3, img_size_3x3), mode='bilinear')
+        x_3x3 = self.patch_embed_3x3_s1(x_3x3, patch_size=3, stride=1)
 
-        token_num_8x8 = 14
-        patch_size_8x8 = random.randint(4, 16)
-        img_size_8x8 = token_num_8x8 * patch_size_8x8
-        x_8x8 = F.interpolate(x, size=(img_size_8x8, img_size_8x8), mode='bilinear')
-        x_8x8 = self.patch_embed_8x8(x_8x8, patch_size=patch_size_8x8)
+        img_size_5x5 = random.choice([84, 98, 112, 126, 140])
+        x_5x5 = F.interpolate(x, size=(img_size_5x5, img_size_5x5), mode='bilinear')
+        x_5x5 = self.patch_embed_5x5_s2(x_5x5, patch_size=5, stride=2)
 
-        token_num_12x12 = 14
-        patch_size_12x12 = random.randint(6, 24)
-        img_size_12x12 = token_num_12x12 * patch_size_12x12
-        x_12x12 = F.interpolate(x, size=(img_size_12x12, img_size_12x12), mode='bilinear')
-        x_12x12 = self.patch_embed_12x12(x_12x12, patch_size=patch_size_12x12)
+        img_size_7x7 = random.choice([140, 154, 168, 182, 196])
+        x_7x7 = F.interpolate(x, size=(img_size_7x7, img_size_7x7), mode='bilinear')
+        x_7x7 = self.patch_embed_7x7_s3(x_7x7, patch_size=7, stride=3)
 
-        token_num_16x16 = 14
-        patch_size_16x16 = random.randint(8, 32)
-        img_size_16x16 = token_num_16x16 * patch_size_16x16
-        x_16x16 = F.interpolate(x, size=(img_size_16x16, img_size_16x16), mode='bilinear')
-        x_16x16 = self.patch_embed_16x16(x_16x16, patch_size=patch_size_16x16)
+        img_size_7x7_s4 = random.choice([196, 210, 224, 238, 252])
+        x_7x7_s4 = F.interpolate(x, size=(img_size_7x7_s4, img_size_7x7_s4), mode='bilinear')
+        x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
 
-        return self(x_4x4), self(x_8x8), self(x_12x12), self(x_16x16)
+        return self.forward_after_patch_embed(x_3x3), \
+            self.forward_after_patch_embed(x_5x5), \
+            self.forward_after_patch_embed(x_7x7), \
+            self.forward_after_patch_embed(x_7x7_s4)
 
-    def modified(self, new_image_size=224, new_patch_size=16):
-        self.embed_args = {}
+    def modified(self):
         self.in_chans = 3
-        self.embed_dim = self.net.num_features
-        self.pre_norm = False
-        self.dynamic_img_pad = False
-        # if self.net.dynamic_img_size:
-        #     # flatten deferred until after pos embed
-        #     self.embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
-        self.patch_embed_4x4 = self.get_new_patch_embed(new_image_size=56, new_patch_size=4)
-        self.patch_embed_8x8 = self.get_new_patch_embed(new_image_size=112, new_patch_size=8)
-        self.patch_embed_12x12 = self.get_new_patch_embed(new_image_size=168, new_patch_size=12)
-        self.patch_embed_16x16 = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
-        self.patch_embed_16x16_origin = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
-        # import pdb;pdb.set_trace()
+        self.embed_dim = 64
+        self.patch_embed_3x3_s1 = self.get_new_patch_embed(new_patch_size=3, new_stride=1)
+        self.patch_embed_5x5_s2 = self.get_new_patch_embed(new_patch_size=5, new_stride=2)
+        self.patch_embed_7x7_s3 = self.get_new_patch_embed(new_patch_size=7, new_stride=3)
+        self.patch_embed_7x7_s4 = self.get_new_patch_embed(new_patch_size=7, new_stride=4)
 
-        self.net.patch_embed = nn.Identity()
-
-    def get_new_patch_embed(self, new_image_size, new_patch_size):
-        new_patch_embed = FlexiPatchEmbed(
-            img_size=new_image_size,
+    def get_new_patch_embed(self, new_patch_size, new_stride):
+        new_patch_embed = FlexiOverlapPatchEmbed(
             patch_size=new_patch_size,
+            stride=new_stride,
             in_chans=self.in_chans,
             embed_dim=self.embed_dim,
-            bias=not self.pre_norm,  # disable bias if pre-norm is used (e.g. CLIP)
-            # dynamic_img_pad=self.dynamic_img_pad,
-            **self.embed_args,
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
             origin_weight = self.net.patch_embed.proj.weight.clone().detach()
-            # new_weight = pi_resize_patch_embed(
-            #     patch_embed=self.origin_state_dict["patch_embed.proj.weight"],
-            #     new_patch_size=(new_patch_size, new_patch_size)
-            # )
             new_weight = pi_resize_patch_embed(
                 patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
             )
             new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
         if self.net.patch_embed.proj.bias is not None:
-            # new_patch_embed.proj.bias = nn.Parameter(torch.tensor(self.origin_state_dict["patch_embed.proj.bias"]),
-            #                                          requires_grad=True)
             new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
                                                      requires_grad=True)
 
         return new_patch_embed
-
-
 
 if __name__ == "__main__":
     parser = LightningArgumentParser()
@@ -333,10 +274,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token-2range-pvt', project='L2P',
+    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token-2range-ratio-pvt', project='L2P',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/L2P/add_random_resize_4conv_fix14token_2range/pvt', save_top_k=1,
+                                          dirpath='ckpt/L2P/add_random_resize_4conv_fix14token_2range_ratio/pvt',
+                                          save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
     # lr_monitor = LearningRateMonitor(logging_interval="epoch")
