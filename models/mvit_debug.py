@@ -5,13 +5,13 @@ import torch.nn.functional as F
 from flexivit_pytorch import (interpolate_resize_patch_embed, pi_resize_patch_embed)
 import torch.nn as nn
 import random
-from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed
+from flexivit_pytorch.myflex import FlexiMViTPatchEmbed
 
 
 class ClassificationEvaluator(pl.LightningModule):
     def __init__(self):
         super().__init__()
-        weights = 'pvt_v2_b3.in1k'
+        weights = 'mvitv2_small.fb_in1k'
         self.net = create_model(weights, pretrained=True)
         self.modified()
 
@@ -20,8 +20,19 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.net.forward_head(x)
         return x
 
-    def forward_after_patch_embed(self, x):
-        x = self.net.stages(x)
+    def forward_after_patch_embed(self, x, feat_size):
+        B, N, C = x.shape
+        if self.net.cls_token is not None:
+            cls_tokens = self.net.cls_token.expand(B, -1, -1)
+            x = torch.cat((cls_tokens, x), dim=1)
+
+        if self.net.pos_embed is not None:
+            x = x + self.pos_embed
+
+        for stage in self.stages:
+            x, feat_size = stage(x, feat_size)
+
+        x = self.net.norm(x)
         x = self.net.forward_head(x)
         return x
 
@@ -74,14 +85,14 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def modified(self):
         self.in_chans = 3
-        self.embed_dim = 64
+        self.embed_dim = self.net.num_features
         self.patch_embed_3x3_s1 = self.get_new_patch_embed(new_patch_size=3, new_stride=1)
         self.patch_embed_5x5_s2 = self.get_new_patch_embed(new_patch_size=5, new_stride=2)
         self.patch_embed_7x7_s3 = self.get_new_patch_embed(new_patch_size=7, new_stride=3)
         self.patch_embed_7x7_s4 = self.get_new_patch_embed(new_patch_size=7, new_stride=4)
 
     def get_new_patch_embed(self, new_patch_size, new_stride):
-        new_patch_embed = FlexiOverlapPatchEmbed(
+        new_patch_embed = FlexiMViTPatchEmbed(
             patch_size=new_patch_size,
             stride=new_stride,
             in_chans=self.in_chans,
