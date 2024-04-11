@@ -143,7 +143,6 @@ class FlexiMViTPatchEmbed(nn.Module):
         self.norm = nn.LayerNorm(embed_dim)
         self.pinvs = self._cache_pinvs()
 
-
     def _cache_pinvs(self) -> dict:
         """Pre-calculate all pinv matrices"""
         self.patch_size_seq = [self.patch_size]
