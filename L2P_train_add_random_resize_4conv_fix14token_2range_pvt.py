@@ -159,10 +159,10 @@ class ClassificationEvaluator(pl.LightningModule):
         self.wd = 5e-4
         self.max_epochs = self.trainer.max_epochs
 
-        params_to_optimize = list(self.patch_embed_4x4.parameters()) + \
-                             list(self.patch_embed_8x8.parameters()) + \
-                             list(self.patch_embed_12x12.parameters()) + \
-                             list(self.patch_embed_16x16.parameters())
+        params_to_optimize = list(self.patch_embed_3x3_s1.parameters()) + \
+                             list(self.patch_embed_5x5_s2.parameters()) + \
+                             list(self.patch_embed_7x7_s3.parameters()) + \
+                             list(self.patch_embed_7x7_s4.parameters())
 
         optimizer = torch.optim.SGD(
             params_to_optimize,
