@@ -3,9 +3,10 @@ from timm import create_model
 import inspect
 import timm.models.pvt_v2
 import timm.models.swin_transformer
+import timm.models.mvitv2
 
 model_name = 'pvt_v2_b3.in1k'
-model_name = 'swin_base_patch4_window7_224.ms_in22k_ft_in1k'
+model_name = 'mvitv2_small.fb_in1k'
 # 创建模型实例
 net = create_model(model_name, pretrained=True)
 print(net.default_cfg["architecture"])
