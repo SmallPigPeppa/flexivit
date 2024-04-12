@@ -1,4 +1,4 @@
-python vanilla_eval_resize_input.py \
+python vanilla_eval_resize_input_new.py \
   --max_epochs 1 \
   --accelerator gpu \
   --devices 8 \
