@@ -3,7 +3,7 @@ python vanilla_eval_resize_input_new.py \
   --accelerator gpu \
   --devices 8 \
   --works 4 \
-  --batch_size 256 \
+  --batch_size 32 \
   --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --model.resize_type pi \
   --model.weights pvt_v2_b3.in1k \
@@ -19,7 +19,7 @@ python vanilla_eval_resize_input_new.py \
   --accelerator gpu \
   --devices 8 \
   --works 4 \
-  --batch_size 256 \
+  --batch_size 32 \
   --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
   --model.resize_type pi \
   --model.weights mvitv2_small.fb_in1k  \
