@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from timm.models._manipulate import checkpoint_seq
 
 import torch.nn as nn
-from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed
+from flexivit_pytorch.myflex import FlexiMViTPatchEmbed
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -129,41 +129,79 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.net.forward_head(x)
         return x
 
-    def forward_after_patch_embed(self, x):
-        x = self.net.stages(x)
+    def forward_after_patch_embed(self, x, feat_size):
+        B, N, C = x.shape
+        # feat_size = x.shape[-2:]
+        if self.net.cls_token is not None:
+            cls_tokens = self.net.cls_token.expand(B, -1, -1)
+            x = torch.cat((cls_tokens, x), dim=1)
+
+        if self.net.pos_embed is not None:
+            x = x + self.net.pos_embed
+
+        for stage in self.net.stages:
+            x, feat_size = stage(x, feat_size)
+
+        x = self.net.norm(x)
         x = self.net.forward_head(x)
         return x
 
+    # def ms_forward(self, x):
+    #     # x_3x3 = F.interpolate(x, size=56, mode='bilinear')
+    #     x_3x3 = self.patch_embed_3x3_s1(x, patch_size=3, stride=1)
+    #
+    #     # x_5x5 = F.interpolate(x, size=112, mode='bilinear')
+    #     x_5x5 = self.patch_embed_5x5_s2(x, patch_size=5, stride=2)
+    #
+    #     # x_7x7 = F.interpolate(x, size=168, mode='bilinear')
+    #     x_7x7 = self.patch_embed_7x7_s3(x, patch_size=7, stride=3)
+    #
+    #     x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
+    #     x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
+    #     # x_7x7_s4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
+    #
+    #     return self.forward_after_patch_embed(x_3x3), \
+    #         self.forward_after_patch_embed(x_5x5), \
+    #         self.forward_after_patch_embed(x_7x7), \
+    #         self.forward_after_patch_embed(x_7x7_s4)
+
     def ms_forward(self, x):
-        # x_3x3 = F.interpolate(x, size=56, mode='bilinear')
-        x_3x3 = self.patch_embed_3x3_s1(x, patch_size=3, stride=1)
+        results = []
 
-        # x_5x5 = F.interpolate(x, size=112, mode='bilinear')
-        x_5x5 = self.patch_embed_5x5_s2(x, patch_size=5, stride=2)
+        conditions = [
+            (56, 3, 1),  # (max_size, patch_size, stride)
+            (112, 5, 2),
+            (168, 7, 3),
+            (224, 7, 4)
+        ]
 
-        # x_7x7 = F.interpolate(x, size=168, mode='bilinear')
-        x_7x7 = self.patch_embed_7x7_s3(x, patch_size=7, stride=3)
+        functions = [
+            self.patch_embed_3x3_s1,
+            self.patch_embed_5x5_s2,
+            self.patch_embed_7x7_s3,
+            self.patch_embed_7x7_s4
+        ]
 
-        x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
-        x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
-        # x_7x7_s4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
+        for (max_size, patch_size, stride), func in zip(conditions, functions):
+            if self.image_size <= max_size:
+                resized_x = F.interpolate(x, size=self.image_size, mode='bilinear')
+                patch_x = func(resized_x, patch_size=patch_size, stride=stride)
+                results.append(self.forward_after_patch_embed(patch_x))
+            else:
+                results.append(torch.zeros(x.size(0), self.num_classes, device=x.device))  # 输出全0，类别数与模型一致
 
-        return self.forward_after_patch_embed(x_3x3), \
-            self.forward_after_patch_embed(x_5x5), \
-            self.forward_after_patch_embed(x_7x7), \
-            self.forward_after_patch_embed(x_7x7_s4)
+        return results
 
     def modified(self):
         self.in_chans = 3
         self.embed_dim = 64
-        # import pdb;pdb.set_trace()
         self.patch_embed_3x3_s1 = self.get_new_patch_embed(new_patch_size=3, new_stride=1)
         self.patch_embed_5x5_s2 = self.get_new_patch_embed(new_patch_size=5, new_stride=2)
         self.patch_embed_7x7_s3 = self.get_new_patch_embed(new_patch_size=7, new_stride=3)
         self.patch_embed_7x7_s4 = self.get_new_patch_embed(new_patch_size=7, new_stride=4)
 
     def get_new_patch_embed(self, new_patch_size, new_stride):
-        new_patch_embed = FlexiOverlapPatchEmbed(
+        new_patch_embed = FlexiMViTPatchEmbed(
             patch_size=new_patch_size,
             stride=new_stride,
             in_chans=self.in_chans,
@@ -181,6 +219,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         return new_patch_embed
 
+
 if __name__ == "__main__":
     parser = LightningArgumentParser()
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
@@ -196,7 +235,7 @@ if __name__ == "__main__":
 
 
     # results_path = f"./L2P_exp/{args.ckpt_path.split('/')[-2]}_fix_14token.csv"
-    results_path = f"./L2P_exp/PVT_fix_14token.csv"
+    results_path = f"./L2P_exp/MViT_fix_14token.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
@@ -204,10 +243,6 @@ if __name__ == "__main__":
 
     for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10),
                                    (154, 11), (168, 12),(182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
-    # for image_size, patch_size in [(42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9),(140, 10),
-    #                                (154, 11), (168, 12), (182, 13), (196, 14), (210, 15), (224, 16), (238, 17),
-    #                                (252, 18)]:
-    # for image_size, patch_size in [(28, 2)]:
 
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
