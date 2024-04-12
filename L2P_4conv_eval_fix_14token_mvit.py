@@ -165,6 +165,24 @@ class ClassificationEvaluator(pl.LightningModule):
     #         self.forward_after_patch_embed(x_7x7), \
     #         self.forward_after_patch_embed(x_7x7_s4)
 
+    # def ms_forward(self, x):
+    #     x_3x3 = F.interpolate(x, size=56, mode='bilinear')
+    #     x_3x3, size_3x3 = self.patch_embed_3x3_s1(x_3x3, patch_size=3, stride=1)
+    #
+    #     x_5x5 = F.interpolate(x, size=112, mode='bilinear')
+    #     x_5x5, size_5x5 = self.patch_embed_5x5_s2(x_5x5, patch_size=5, stride=2)
+    #
+    #     x_7x7 = F.interpolate(x, size=168, mode='bilinear')
+    #     x_7x7, size_7x7 = self.patch_embed_7x7_s3(x_7x7, patch_size=7, stride=3)
+    #
+    #     x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
+    #     x_7x7_s4, size_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
+    #
+    #     return self.forward_after_patch_embed(x_3x3, size_3x3), \
+    #         self.forward_after_patch_embed(x_5x5, size_5x5), \
+    #         self.forward_after_patch_embed(x_7x7, size_7x7), \
+    #         self.forward_after_patch_embed(x_7x7_s4, size_7x7_s4)
+
     def ms_forward(self, x):
         results = []
 
@@ -185,8 +203,8 @@ class ClassificationEvaluator(pl.LightningModule):
         for (max_size, patch_size, stride), func in zip(conditions, functions):
             if self.image_size <= max_size:
                 resized_x = F.interpolate(x, size=self.image_size, mode='bilinear')
-                patch_x = func(resized_x, patch_size=patch_size, stride=stride)
-                results.append(self.forward_after_patch_embed(patch_x))
+                patch_x, size_x = func(resized_x, patch_size=patch_size, stride=stride)
+                results.append(self.forward_after_patch_embed(patch_x, size_x))
             else:
                 results.append(torch.zeros(x.size(0), self.num_classes, device=x.device))  # 输出全0，类别数与模型一致
 
@@ -232,8 +250,6 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
     trainer = pl.Trainer.from_argparse_args(args)
 
-
-
     # results_path = f"./L2P_exp/{args.ckpt_path.split('/')[-2]}_fix_14token.csv"
     results_path = f"./L2P_exp/MViT_fix_14token.csv"
     print(f'result save in {results_path} ...')
@@ -242,12 +258,13 @@ if __name__ == "__main__":
         os.remove(results_path)
 
     for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10),
-                                   (154, 11), (168, 12),(182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
-
+                                   (154, 11), (168, 12), (182, 13), (196, 14), (210, 15), (224, 16), (238, 17),
+                                   (252, 18)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         args["model"].results_path = results_path
-        model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True, **args["model"])
+        model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True,
+                                                             **args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
         val_transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
