@@ -155,6 +155,7 @@ class ClassificationEvaluator(pl.LightningModule):
     def modified(self):
         self.in_chans = 3
         self.embed_dim = 64
+        import pdb;pdb.set_trace()
         self.patch_embed_3x3_s1 = self.get_new_patch_embed(new_patch_size=3, new_stride=1)
         self.patch_embed_5x5_s2 = self.get_new_patch_embed(new_patch_size=5, new_stride=2)
         self.patch_embed_7x7_s3 = self.get_new_patch_embed(new_patch_size=7, new_stride=3)
