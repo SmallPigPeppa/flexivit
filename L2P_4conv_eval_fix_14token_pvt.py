@@ -144,8 +144,9 @@ class ClassificationEvaluator(pl.LightningModule):
         # x_7x7 = F.interpolate(x, size=168, mode='bilinear')
         x_7x7 = self.patch_embed_7x7_s3(x, patch_size=7, stride=3)
 
-        # x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
-        x_7x7_s4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
+        x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
+        x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
+        # x_7x7_s4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
 
         return self.forward_after_patch_embed(x_3x3), \
             self.forward_after_patch_embed(x_5x5), \
@@ -203,9 +204,10 @@ if __name__ == "__main__":
 
     # for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10),
     #                                (154, 11), (168, 12),(182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
-    for image_size, patch_size in [(42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9),(140, 10),
-                                   (154, 11), (168, 12), (182, 13), (196, 14), (210, 15), (224, 16), (238, 17),
-                                   (252, 18)]:
+    # for image_size, patch_size in [(42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9),(140, 10),
+    #                                (154, 11), (168, 12), (182, 13), (196, 14), (210, 15), (224, 16), (238, 17),
+    #                                (252, 18)]:
+    for image_size, patch_size in [(28, 2)]:
 
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
