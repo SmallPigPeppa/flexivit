@@ -25,7 +25,7 @@ for ckpt_path in "${ckpt_paths[@]}"; do
             --accelerator gpu \
             --devices 8 \
             --works 4 \
-            --batch_size 64 \
+            --batch_size 32 \
             --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
             --ckpt_path ${ckpt_path} \
             --model.resize_type pi \
