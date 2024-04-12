@@ -144,14 +144,22 @@ class ClassificationEvaluator(pl.LightningModule):
         # x_7x7 = F.interpolate(x, size=168, mode='bilinear')
         x_7x7 = self.patch_embed_7x7_s3(x, patch_size=7, stride=3)
 
-        x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
-        x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
+        if self.image_size > 28:
+            x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
+            x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
+            return self.forward_after_patch_embed(x_3x3), \
+                self.forward_after_patch_embed(x_5x5), \
+                self.forward_after_patch_embed(x_7x7), \
+                self.forward_after_patch_embed(x_7x7_s4)
+
+        else:
+            return self.forward_after_patch_embed(x_3x3), \
+                self.forward_after_patch_embed(x_5x5), \
+                self.forward_after_patch_embed(x_7x7), \
+                torch.zeros(x.size(0), self.num_classes, device=x.device)
         # x_7x7_s4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
 
-        return self.forward_after_patch_embed(x_3x3), \
-            self.forward_after_patch_embed(x_5x5), \
-            self.forward_after_patch_embed(x_7x7), \
-            self.forward_after_patch_embed(x_7x7_s4)
+
 
     def modified(self):
         self.in_chans = 3
