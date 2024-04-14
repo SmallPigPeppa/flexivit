@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from timm.models._manipulate import checkpoint_seq
 
 import torch.nn as nn
-from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed
+from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed,FlexiOverlapPatchEmbed_DB
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -172,7 +172,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.patch_embed_7x7_s4 = self.get_new_patch_embed(new_patch_size=7, new_stride=4)
 
     def get_new_patch_embed(self, new_patch_size, new_stride):
-        new_patch_embed = FlexiOverlapPatchEmbed(
+        new_patch_embed = FlexiOverlapPatchEmbed_DB(
             patch_size=new_patch_size,
             stride=new_stride,
             in_chans=self.in_chans,
