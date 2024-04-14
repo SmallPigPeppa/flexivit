@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from timm.models._manipulate import checkpoint_seq
 
 import torch.nn as nn
-from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed,FlexiOverlapPatchEmbed_DB
+from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed, FlexiOverlapPatchEmbed_DB
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -130,6 +130,7 @@ class ClassificationEvaluator(pl.LightningModule):
         return x
 
     def forward_after_patch_embed(self, x):
+        x = self.net.proj.norm(x)
         x = self.net.stages(x)
         x = self.net.forward_head(x)
         return x
@@ -164,8 +165,6 @@ class ClassificationEvaluator(pl.LightningModule):
                 torch.zeros(x.size(0), self.num_classes, device=x.device)
         # x_7x7_s4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
 
-
-
     def modified(self):
         self.in_chans = 3
         self.embed_dim = 64
@@ -191,7 +190,6 @@ class ClassificationEvaluator(pl.LightningModule):
         # if self.net.patch_embed.proj.bias is not None:
         #     new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
         #                                              requires_grad=True)
-
 
         # if hasattr(self.net.patch_embed.proj, 'weight'):
         origin_weight = self.net.patch_embed.proj.weight.clone().detach()

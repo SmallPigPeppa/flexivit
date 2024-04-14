@@ -34,7 +34,7 @@ class FlexiOverlapPatchEmbed(nn.Module):
         )
         self.interpolation = interpolation
         self.antialias = antialias
-        self.norm = nn.LayerNorm(embed_dim)
+        # self.norm = nn.LayerNorm(embed_dim)
         self.pinvs = self._cache_pinvs()
 
     def _cache_pinvs(self) -> dict:
@@ -202,23 +202,20 @@ class FlexiOverlapPatchEmbed_DB(nn.Module):
     ) -> Tensor:
 
         patch_size = to_2tuple(patch_size)
-        #
-        # # Resize conv weights
-        # if patch_size == self.patch_size:
-        #     weight = self.proj.weight
-        #
-        # else:
-        #     weight = self.resize_patch_embed(self.proj.weight, patch_size)
 
-        weight = self.proj.weight
-        # # Apply conv with resized weights
-        # x = F.conv2d(x, weight, bias=self.proj.bias, stride=stride,
-        #              padding=(patch_size[0] // 2, patch_size[1] // 2))
+        # Resize conv weights
+        if patch_size == self.patch_size:
+            weight = self.proj.weight
 
-        x = self.proj(x)
+        else:
+            weight = self.resize_patch_embed(self.proj.weight, patch_size)
+
+        # Apply conv with resized weights
+        x = F.conv2d(x, weight, bias=self.proj.bias, stride=stride,
+                     padding=(patch_size[0] // 2, patch_size[1] // 2))
 
         x = x.permute(0, 2, 3, 1)
-        x = self.norm(x)
+        # x = self.norm(x)
         return x
 
 
