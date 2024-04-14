@@ -3,10 +3,11 @@ ckpt_paths=(
 #    "ckpt/L2P/add_random_resize_4conv_fix14token_2range_ratio/last.ckpt"
 #    "ckpt/L2P/add_random_resize_4conv_fix14token_2range/last.ckpt"
 #    "ckpt/L2P/add_random_resize_4conv_fix14token_24816/last.ckpt"
+     "ckpt/L2P/add_random_resize_4conv_fix14token_2range_ratio/deit_10epoch/last.ckpt"
 )
 # ratio2!!!!!
 scripts=(
-#    "L2P_4conv_eval_fix_14token.py"
+    "L2P_4conv_eval_fix_14token.py"
 #    "L2P_4conv_eval_fix_14token_ratio.py"
     "L2P_4conv_eval_fix_14token_ratio2.py"
 #    "L2P_4conv_eval_fix_anchor.py"
@@ -27,7 +28,7 @@ for ckpt_path in "${ckpt_paths[@]}"; do
             --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
             --ckpt_path ${ckpt_path} \
             --model.resize_type pi \
-            --model.weights vit_base_patch16_224.augreg2_in21k_ft_in1k \
+            --model.weights deit_base_distilled_patch16_224.fb_in1k \
             --model.num_classes 1000 \
             --model.patch_size 16 \
             --model.image_size 224
