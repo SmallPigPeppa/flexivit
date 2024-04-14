@@ -130,7 +130,7 @@ class ClassificationEvaluator(pl.LightningModule):
         return x
 
     def forward_after_patch_embed(self, x):
-        x = self.net.proj.norm(x)
+        x = self.net.patch_embed.norm(x)
         x = self.net.stages(x)
         x = self.net.forward_head(x)
         return x
