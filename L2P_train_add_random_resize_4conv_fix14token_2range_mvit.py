@@ -288,10 +288,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token-2range-mvit', project='L2P',
+    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token-2range-mvit-fixpadding', project='L2P',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/L2P/add_random_resize_4conv_fix14token_2range/mvit',
+                                          dirpath='ckpt/L2P/add_random_resize_4conv_fix14token_2range/mvit_fixpadding',
                                           save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])

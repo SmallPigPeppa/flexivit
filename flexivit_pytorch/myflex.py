@@ -30,6 +30,7 @@ class FlexiOverlapPatchEmbed(nn.Module):
             kernel_size=self.patch_size,
             stride=self.stride,
             bias=bias,
+            padding=(self.patch_size[0] // 2, self.patch_size[1] // 2)
         )
         self.interpolation = interpolation
         self.antialias = antialias
@@ -137,6 +138,7 @@ class FlexiMViTPatchEmbed(nn.Module):
             kernel_size=self.patch_size,
             stride=self.stride,
             bias=bias,
+            padding=(self.patch_size[0] // 2, self.patch_size[1] // 2)
         )
         self.interpolation = interpolation
         self.antialias = antialias
