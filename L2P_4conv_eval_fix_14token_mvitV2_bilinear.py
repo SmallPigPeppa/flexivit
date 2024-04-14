@@ -201,13 +201,13 @@ class ClassificationEvaluator(pl.LightningModule):
         ]
 
         for (max_size, patch_size, stride), func in zip(conditions, functions):
-            if self.image_size <= max_size:
-                resized_x = F.interpolate(x, size=max_size, mode='bilinear')
-                patch_x, size_x = func(resized_x, patch_size=patch_size, stride=stride)
-                # patch_x, size_x = func(x, patch_size=patch_size, stride=stride)
-                results.append(self.forward_after_patch_embed(patch_x, size_x))
-            else:
-                results.append(torch.zeros(x.size(0), self.num_classes, device=x.device))  # 输出全0，类别数与模型一致
+            # if self.image_size <= max_size:
+            resized_x = F.interpolate(x, size=max_size, mode='bilinear')
+            patch_x, size_x = func(resized_x, patch_size=patch_size, stride=stride)
+            # patch_x, size_x = func(x, patch_size=patch_size, stride=stride)
+            results.append(self.forward_after_patch_embed(patch_x, size_x))
+            # else:
+            #     results.append(torch.zeros(x.size(0), self.num_classes, device=x.device))  # 输出全0，类别数与模型一致
 
         return results
 
