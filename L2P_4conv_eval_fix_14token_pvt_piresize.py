@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from timm.models._manipulate import checkpoint_seq
 
 import torch.nn as nn
-from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed
+from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed_DB as FlexiOverlapPatchEmbed
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -130,6 +130,7 @@ class ClassificationEvaluator(pl.LightningModule):
         return x
 
     def forward_after_patch_embed(self, x):
+        x = self.net.patch_embed.norm(x)
         x = self.net.stages(x)
         x = self.net.forward_head(x)
         return x

@@ -17,7 +17,7 @@ from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 import torch.nn as nn
 import random
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
-from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed
+from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed_DB as FlexiOverlapPatchEmbed
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -190,7 +190,13 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.net.forward_head(x)
         return x
 
+    # def forward_after_patch_embed(self, x):
+    #     x = self.net.stages(x)
+    #     x = self.net.forward_head(x)
+    #     return x
+
     def forward_after_patch_embed(self, x):
+        x = self.net.patch_embed.norm(x)
         x = self.net.stages(x)
         x = self.net.forward_head(x)
         return x
@@ -274,10 +280,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token-2range-pvt-fixpadding', project='L2P',
+    wandb_logger = WandbLogger(name='add-random-resize-4conv-fix14token-2range-pvt-fixnorm', project='L2P',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/L2P/add_random_resize_4conv_fix14token_2range/pvt_fixpadding',
+                                          dirpath='ckpt/L2P/add_random_resize_4conv_fix14token_2range/pvt_fixnorm',
                                           save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
