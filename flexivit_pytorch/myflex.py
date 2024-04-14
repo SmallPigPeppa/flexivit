@@ -200,7 +200,7 @@ class FlexiOverlapPatchEmbed_DB(nn.Module):
             stride: int = None,
     ) -> Tensor:
 
-        # patch_size = to_2tuple(patch_size)
+        patch_size = to_2tuple(patch_size)
         #
         # # Resize conv weights
         # if patch_size == self.patch_size:
