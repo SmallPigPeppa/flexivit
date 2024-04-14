@@ -148,9 +148,13 @@ class ClassificationEvaluator(pl.LightningModule):
             x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
             x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
             # x_7x7_s4 = self.net.patch_embed(x_7x7_s4)
-            return self.forward_after_patch_embed(x_3x3), \
-                self.forward_after_patch_embed(x_5x5), \
-                self.forward_after_patch_embed(x_7x7), \
+            # return self.forward_after_patch_embed(x_3x3), \
+            #     self.forward_after_patch_embed(x_5x5), \
+            #     self.forward_after_patch_embed(x_7x7), \
+            #     self.forward_after_patch_embed(x_7x7_s4)
+            return self.forward_after_patch_embed(x_7x7_s4), \
+                self.forward_after_patch_embed(x_7x7_s4), \
+                self.forward_after_patch_embed(x_7x7_s4), \
                 self.forward_after_patch_embed(x_7x7_s4)
 
         else:
@@ -187,6 +191,17 @@ class ClassificationEvaluator(pl.LightningModule):
         # if self.net.patch_embed.proj.bias is not None:
         #     new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
         #                                              requires_grad=True)
+
+
+        # if hasattr(self.net.patch_embed.proj, 'weight'):
+        origin_weight = self.net.patch_embed.proj.weight.clone().detach()
+        # new_weight = interpolate_resize_patch_embed(
+        #     patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
+        # )
+        new_patch_embed.proj.weight = nn.Parameter(origin_weight, requires_grad=True)
+        # if self.net.patch_embed.proj.bias is not None:
+        new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
+                                                 requires_grad=True)
 
         return new_patch_embed
 
