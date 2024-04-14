@@ -13,7 +13,7 @@ scripts=(
 #     "L2P_4conv_eval_fix_14token_mvit.py"
 #     "L2P_4conv_eval_fix_14token_mvit_piresize.py"
 #     "L2P_4conv_eval_fix_14token_mvit_bilinear.py"
-     "L2P_4conv_eval_fix_14token_mvitV2_piresize.py"
+#     "L2P_4conv_eval_fix_14token_mvitV2_piresize.py"
      "L2P_4conv_eval_fix_14token_mvitV2_bilinear.py"
 #     "L2P_4conv_eval_fix_14token_mvitV2.py"
 #    "L2P_4conv_eval_fix_anchor.py"
