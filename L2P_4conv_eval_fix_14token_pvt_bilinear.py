@@ -147,7 +147,7 @@ class ClassificationEvaluator(pl.LightningModule):
         if self.image_size > 28:
             x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
             # x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
-            x_7x7_s4 = self.net.patch_embed(x_7x7_s4, patch_size=7, stride=4)
+            x_7x7_s4 = self.net.patch_embed(x_7x7_s4)
             return self.forward_after_patch_embed(x_3x3), \
                 self.forward_after_patch_embed(x_5x5), \
                 self.forward_after_patch_embed(x_7x7), \
