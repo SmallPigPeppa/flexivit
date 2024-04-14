@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from timm.models._manipulate import checkpoint_seq
 
 import torch.nn as nn
-from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed, FlexiOverlapPatchEmbed_DB
+from flexivit_pytorch.myflex import FlexiOverlapPatchEmbed_DB as FlexiOverlapPatchEmbed
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -148,14 +148,9 @@ class ClassificationEvaluator(pl.LightningModule):
         if self.image_size > 28:
             x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
             x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
-            # x_7x7_s4 = self.net.patch_embed(x_7x7_s4)
-            # return self.forward_after_patch_embed(x_3x3), \
-            #     self.forward_after_patch_embed(x_5x5), \
-            #     self.forward_after_patch_embed(x_7x7), \
-            #     self.forward_after_patch_embed(x_7x7_s4)
-            return self.forward_after_patch_embed(x_7x7_s4), \
-                self.forward_after_patch_embed(x_7x7_s4), \
-                self.forward_after_patch_embed(x_7x7_s4), \
+            return self.forward_after_patch_embed(x_3x3), \
+                self.forward_after_patch_embed(x_5x5), \
+                self.forward_after_patch_embed(x_7x7), \
                 self.forward_after_patch_embed(x_7x7_s4)
 
         else:
@@ -175,31 +170,21 @@ class ClassificationEvaluator(pl.LightningModule):
         self.patch_embed_7x7_s4 = self.get_new_patch_embed(new_patch_size=7, new_stride=4)
 
     def get_new_patch_embed(self, new_patch_size, new_stride):
-        new_patch_embed = FlexiOverlapPatchEmbed_DB(
+        new_patch_embed = FlexiOverlapPatchEmbed(
             patch_size=new_patch_size,
             stride=new_stride,
             in_chans=self.in_chans,
             embed_dim=self.embed_dim,
         )
-        # if hasattr(self.net.patch_embed.proj, 'weight'):
-        #     origin_weight = self.net.patch_embed.proj.weight.clone().detach()
-        #     new_weight = interpolate_resize_patch_embed(
-        #         patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
-        #     )
-        #     new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
-        # if self.net.patch_embed.proj.bias is not None:
-        #     new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
-        #                                              requires_grad=True)
-
-        # if hasattr(self.net.patch_embed.proj, 'weight'):
-        origin_weight = self.net.patch_embed.proj.weight.clone().detach()
-        # new_weight = interpolate_resize_patch_embed(
-        #     patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
-        # )
-        new_patch_embed.proj.weight = nn.Parameter(origin_weight, requires_grad=True)
-        # if self.net.patch_embed.proj.bias is not None:
-        new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
-                                                 requires_grad=True)
+        if hasattr(self.net.patch_embed.proj, 'weight'):
+            origin_weight = self.net.patch_embed.proj.weight.clone().detach()
+            new_weight = interpolate_resize_patch_embed(
+                patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
+            )
+            new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
+        if self.net.patch_embed.proj.bias is not None:
+            new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
+                                                     requires_grad=True)
 
         return new_patch_embed
 
