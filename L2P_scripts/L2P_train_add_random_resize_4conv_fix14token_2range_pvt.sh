@@ -14,6 +14,7 @@ python L2P_train_add_random_resize_4conv_fix14token_2range_pvt.py \
   --model.results_path ./resize_weight.csv
 
 
+
 #python L2P_train_add_random_resize_4conv_fix14token_1.5range.py \
 #  --max_epochs 5 \
 #  --precision 16 \
