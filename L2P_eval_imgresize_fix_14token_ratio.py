@@ -169,7 +169,8 @@ class ClassificationEvaluator(pl.LightningModule):
         return self(x_0), self(x_1), self(x_2), self(x_3)
 
     def origin_forward(self, x: torch.Tensor) -> torch.Tensor:
-        x_0 = self.patch_embed_16x16_origin(x, patch_size=[self.patch_size_0, self.patch_size_1])
+        x = F.interpolate(x, size=[16 * 14, 16 * 14], mode='bilinear')
+        x_0 = self.patch_embed_16x16_origin(x, patch_size=[16, 16])
         return self(x_0)
 
     def modified(self, new_image_size=224, new_patch_size=16):
