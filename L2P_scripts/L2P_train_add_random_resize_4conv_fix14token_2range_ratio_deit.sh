@@ -1,5 +1,5 @@
 python L2P_train_add_random_resize_4conv_fix14token_2range_ratio_deit.py \
-  --max_epochs 10 \
+  --max_epochs 5 \
   --precision 16 \
   --accelerator gpu \
   --devices 8 \
