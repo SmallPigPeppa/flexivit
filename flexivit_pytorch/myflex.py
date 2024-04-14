@@ -113,6 +113,7 @@ class FlexiOverlapPatchEmbed(nn.Module):
         x = self.norm(x)
         return x
 
+
 class FlexiOverlapPatchEmbed_DB(nn.Module):
     def __init__(
             self,
@@ -210,9 +211,11 @@ class FlexiOverlapPatchEmbed_DB(nn.Module):
         #     weight = self.resize_patch_embed(self.proj.weight, patch_size)
 
         weight = self.proj.weight
-        # Apply conv with resized weights
-        x = F.conv2d(x, weight, bias=self.proj.bias, stride=stride,
-                     padding=(patch_size[0] // 2, patch_size[1] // 2))
+        # # Apply conv with resized weights
+        # x = F.conv2d(x, weight, bias=self.proj.bias, stride=stride,
+        #              padding=(patch_size[0] // 2, patch_size[1] // 2))
+
+        x = self.proj(x)
 
         x = x.permute(0, 2, 3, 1)
         x = self.norm(x)
