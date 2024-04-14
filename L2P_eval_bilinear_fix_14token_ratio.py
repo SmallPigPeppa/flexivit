@@ -225,7 +225,7 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
     trainer = pl.Trainer.from_argparse_args(args)
 
-    results_path = f"./L2P_exp_ratio/flex_fix_14token_ratio.csv"
+    results_path = f"./L2P_exp_ratio/bilinear_fix_14token_ratio.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
