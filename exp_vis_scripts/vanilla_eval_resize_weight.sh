@@ -10,7 +10,7 @@ python vv_exp_vis_vanilla_eval_resize_weight.py \
   --model.num_classes 1000 \
   --model.patch_size 16 \
   --model.image_size 224 \
-  --model.resize_type pi \
+  --model.resize_type interpolate \
   --model.results_path exp_vis/debug.csv
 
 
