@@ -20,9 +20,6 @@ def pi_resize_patch_embed(
     """Resample patch embedding weights to a target resolution via pseudo-inverse
     resizing.
 
-    Based on:
-        https://github.com/google-research/big_vision/blob/b00544b81f8694488d5f36295aeb7972f3755ffe/big_vision/models/proj/flexi/vit.py
-        https://arxiv.org/abs/2212.08013
 
     Args:
         patch_embed: Patch embedding parameters of size [d, c, h, w]
