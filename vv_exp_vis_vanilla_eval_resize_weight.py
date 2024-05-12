@@ -91,7 +91,6 @@ class ClassificationEvaluator(pl.LightningModule):
         return self.net(x)
 
     def forward_patch_embed(self, x):
-        a = 1
         x = self.net.patch_embed(x)
         return x
 

@@ -75,66 +75,6 @@ class ClassificationEvaluator(pl.LightningModule):
         # modified
         self.modified(new_image_size=self.image_size, new_patch_size=self.patch_size)
 
-    def test_step(self, batch, _):
-        x, y = batch
-        x = F.interpolate(x, size=self.image_size, mode='bilinear')
-
-        # Pass through network
-        pred0, pred1, pred2, pred3 = self.ms_forward(x)
-
-        # Get accuracy
-        acc_0 = self.acc_0(pred0, y)
-        acc_1 = self.acc_1(pred1, y)
-        acc_2 = self.acc_2(pred2, y)
-        acc_3 = self.acc_3(pred3, y)
-
-        # Log
-        out_dict = {
-            'res': self.image_size,
-            'test_acc_0': acc_0,
-            'test_acc_1': acc_1,
-            'test_acc_2': acc_2,
-            'test_acc_3': acc_3
-        }
-        self.log_dict(out_dict, sync_dist=True, on_epoch=True)
-
-        return out_dict
-
-    def test_epoch_end(self, outputs):
-        if self.results_path:
-            # 计算每个acc并乘以100
-            acc_0 = self.acc_0.compute().detach().cpu().item() * 100
-            acc_1 = self.acc_1.compute().detach().cpu().item() * 100
-            acc_2 = self.acc_2.compute().detach().cpu().item() * 100
-            acc_3 = self.acc_3.compute().detach().cpu().item() * 100
-            max_acc = max(acc_0, acc_1, acc_2, acc_3)
-
-            # 确保所有进程都执行到这里，但只有主进程进行写入操作
-            if self.trainer.is_global_zero:
-                column_name = f"{self.image_size}_{self.patch_size}"
-
-                if os.path.exists(self.results_path):
-                    # 结果文件已存在，读取现有数据
-                    results_df = pd.read_csv(self.results_path, index_col=0)
-                    # 检查列是否存在，若不存在则在适当位置添加
-                    if column_name not in results_df:
-                        results_df[column_name] = [None] * len(results_df)  # 先添加空列，防止DataFrame对齐问题
-                else:
-                    # 结果文件不存在，创建新的DataFrame，此时有5行
-                    results_df = pd.DataFrame(columns=[column_name], index=['acc0', 'acc1', 'acc2', 'acc3', 'max_acc'])
-                    # 确保目录存在
-                    os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
-
-                # 更新DataFrame中的值
-                results_df.at['acc0', column_name] = acc_0
-                results_df.at['acc1', column_name] = acc_1
-                results_df.at['acc2', column_name] = acc_2
-                results_df.at['acc3', column_name] = acc_3
-                results_df.at['max_acc', column_name] = max_acc
-
-                # 保存更新后的结果
-                results_df.to_csv(self.results_path)
-
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
         x = self.net._pos_embed(x)
@@ -159,24 +99,10 @@ class ClassificationEvaluator(pl.LightningModule):
         return x if pre_logits else self.net.head(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.forward_patch_embed(x)
         x = self.forward_features(x)
         x = self.forward_head(x)
         return x
-
-    def ms_forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x_0 = F.interpolate(x, size=56, mode='bilinear')
-        x_0 = self.patch_embed_4x4(x, patch_size=self.patch_size)
-
-        # x_1 = F.interpolate(x, size=112, mode='bilinear')
-        x_1 = self.patch_embed_8x8(x, patch_size=self.patch_size)
-
-        # x_2 = F.interpolate(x, size=168, mode='bilinear')
-        x_2 = self.patch_embed_12x12(x, patch_size=self.patch_size)
-
-        # x_3 = F.interpolate(x, size=224, mode='bilinear')
-        x_3 = self.patch_embed_16x16(x, patch_size=self.patch_size)
-
-        return self(x_0), self(x_1), self(x_2), self(x_3)
 
     def modified(self, new_image_size=224, new_patch_size=16):
         self.embed_args = {}
@@ -218,6 +144,110 @@ class ClassificationEvaluator(pl.LightningModule):
 
         return new_patch_embed
 
+    def forward_patch_embed(self, x):
+        if self.image_size == 54:
+            x = self.patch_embed_4x4(x, patch_size=self.patch_size)
+        elif self.image_size == 224:
+            x = self.patch_embed_16x16_origin(x, patch_size=self.patch_size)
+        return x
+
+    def forward_class_token(self, x):
+        x = self.forward_patch_embed(x)
+        x = self.forward_features(x)
+        if self.net.attn_pool is not None:
+            x = self.net.attn_pool(x)
+        elif self.net.global_pool == 'avg':
+            x = x[:, self.net.num_prefix_tokens:].mean(dim=1)
+        elif self.net.global_pool:
+            x = x[:, 0]  # class token
+        return x
+        # x = self.fc_norm(x)
+        # x = self.head_drop(x)
+        # return x if pre_logits else self.head(x)
+
+    def forward_patch_stats(self, x):
+        """Extracts the patch embeddings and computes their mean and variance."""
+        patch_embeds = self.net.patch_embed(x)  # Assuming patch_embed is accessible like this
+        return patch_embeds.mean(dim=[0, 1, 2]), patch_embeds.var(dim=[0, 1, 2])
+
+    def forward_class_token_stats(self, x):
+        """Extracts the class token and computes its mean and variance."""
+        class_token = self.forward_class_token(x)  # Reuse your forward_class_token method
+        return class_token.mean(dim=[0, 1]), class_token.var(dim=[0, 1])
+
+    def test_step(self, batch, _):
+        x, y = batch
+        x = F.interpolate(x, size=self.image_size, mode='bilinear')
+
+        # Pass through network
+        pred = self(x)
+        loss = self.loss_fn(pred, y)
+
+        # Get accuracy
+        acc = self.acc(pred, y)
+
+
+        # Compute stats for patch embeddings and class tokens
+        patch_mean, patch_var = self.forward_patch_stats(x)
+        class_token_mean, class_token_var = self.forward_class_token_stats(x)
+
+        # Log
+        self.log_dict({
+            'test_loss': loss,
+            'test_acc': acc,
+            'patch_mean': patch_mean,
+            'patch_variance': patch_var,
+            'class_token_mean': class_token_mean,
+            'class_token_variance': class_token_var
+        }, sync_dist=True, on_epoch=True)
+
+        return {
+            'loss': loss,
+            'accuracy': acc,
+            'patch_mean': patch_mean,
+            'patch_variance': patch_var,
+            'class_token_mean': class_token_mean,
+            'class_token_variance': class_token_var
+        }
+
+        # return loss
+
+    def test_epoch_end(self, outputs):
+
+        # Example of how to aggregate means and variances across batches
+        avg_patch_mean = torch.stack([x['patch_mean'] for x in outputs]).mean(0)
+        avg_patch_variance = torch.stack([x['patch_variance'] for x in outputs]).mean(0)
+        avg_class_token_mean = torch.stack([x['class_token_mean'] for x in outputs]).mean(0)
+        avg_class_token_variance = torch.stack([x['class_token_variance'] for x in outputs]).mean(0)
+
+        # Log or print final aggregated values
+        print("Average Patch Mean:", avg_patch_mean)
+        print("Average Patch Variance:", avg_patch_variance)
+        print("Average Class Token Mean:", avg_class_token_mean)
+        print("Average Class Token Variance:", avg_class_token_variance)
+
+        if self.results_path:
+            acc = self.acc.compute().detach().cpu().item()
+            acc = acc * 100
+            # 让所有进程都执行到这里，但只有主进程进行写入操作
+            if self.trainer.is_global_zero:
+                column_name = f"{self.image_size}_{self.patch_size}"
+
+                if os.path.exists(self.results_path):
+                    # 结果文件已存在，读取现有数据
+                    results_df = pd.read_csv(self.results_path, index_col=0)
+                    # 检查列是否存在，若不存在则添加
+                    results_df[column_name] = acc
+                else:
+                    # 结果文件不存在，创建新的DataFrame
+                    results_df = pd.DataFrame({column_name: [acc]})
+                    # 确保目录存在
+                    os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
+
+                # 保存更新后的结果
+                results_df.to_csv(self.results_path)
+
+
 
 if __name__ == "__main__":
     parser = LightningArgumentParser()
@@ -231,21 +261,18 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
     trainer = pl.Trainer.from_argparse_args(args)
 
-
-
-    results_path = f"./L2P_exp/{args.ckpt_path.split('/')[-2]}_fix_14token.csv"
+    results_path = "exp_vis/debug.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
         os.remove(results_path)
 
-    for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10),
-                                   (154, 11), (168, 12),(182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
-
+    for image_size, patch_size in [(56, 4), (224, 16)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         args["model"].results_path = results_path
-        model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True, **args["model"])
+        model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True,
+                                                             **args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
         val_transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
