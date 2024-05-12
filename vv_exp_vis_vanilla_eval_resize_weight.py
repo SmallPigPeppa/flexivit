@@ -91,6 +91,7 @@ class ClassificationEvaluator(pl.LightningModule):
         return self.net(x)
 
     def forward_patch_embed(self, x):
+        a = 1
         x = self.net.patch_embed(x)
         return x
 
@@ -100,7 +101,7 @@ class ClassificationEvaluator(pl.LightningModule):
             x = self.net.attn_pool(x)
         elif self.net.global_pool == 'avg':
             x = x[:, self.net.num_prefix_tokens:].mean(dim=1)
-        elif self.global_pool:
+        elif self.net.global_pool:
             x = x[:, 0]  # class token
         return x
         # x = self.fc_norm(x)
@@ -110,12 +111,12 @@ class ClassificationEvaluator(pl.LightningModule):
     def forward_patch_stats(self, x):
         """Extracts the patch embeddings and computes their mean and variance."""
         patch_embeds = self.net.patch_embed(x)  # Assuming patch_embed is accessible like this
-        return patch_embeds.mean(dim=[0, 2, 3]), patch_embeds.var(dim=[0, 2, 3])
+        return patch_embeds.mean(dim=[0, 1, 2]), patch_embeds.var(dim=[0, 1, 2])
 
     def forward_class_token_stats(self, x):
         """Extracts the class token and computes its mean and variance."""
         class_token = self.forward_class_token(x)  # Reuse your forward_class_token method
-        return class_token.mean(dim=0), class_token.var(dim=0)
+        return class_token.mean(dim=[0, 1]), class_token.var(dim=[0, 1])
 
 
 

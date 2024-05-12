@@ -70,12 +70,12 @@ class ClassificationEvaluator(pl.LightningModule):
     def forward_patch_stats(self, x):
         """Extracts the patch embeddings and computes their mean and variance."""
         patch_embeds = self.net.patch_embed(x)  # Assuming patch_embed is accessible like this
-        return patch_embeds.mean(dim=[0, 2, 3]), patch_embeds.var(dim=[0, 2, 3])
+        return patch_embeds.mean(dim=[0, 1, 2]), patch_embeds.var(dim=[0, 1, 2])
 
     def forward_class_token_stats(self, x):
         """Extracts the class token and computes its mean and variance."""
         class_token = self.forward_class_token(x)  # Reuse your forward_class_token method
-        return class_token.mean(dim=0), class_token.var(dim=0)
+        return class_token.mean(dim=[0, 1]), class_token.var(dim=[0, 1])
 
 
 if __name__ == '__main__':
@@ -90,14 +90,13 @@ if __name__ == '__main__':
     )
 
     m = ClassificationEvaluator(weights=model_name)
-    x = torch.rand(size=(1, 3, 224, 224))
+    x = torch.rand(size=(4, 3, 224, 224))
     patch_embeds = m.forward_patch_embed(x)
     class_tokens = m.forward_class_token(x)
     print(patch_embeds.shape)
     print(class_tokens.shape)
 
-
     patch_stats = m.forward_patch_stats(x)
     print(patch_stats)
-    # class_token_stats = m.forward_class_token_stats(patch_embeds)
-    # print(class_token_stats.shape)
+    class_token_stats = m.forward_class_token_stats(x)
+    print(class_token_stats)
