@@ -72,6 +72,9 @@ class ClassificationEvaluator(pl.LightningModule):
         # modified
         self.modified()
 
+        self.sim_patches_list = []
+        self.sim_classes_list = []
+
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
         x = self.net._pos_embed(x)
@@ -209,7 +212,7 @@ class ClassificationEvaluator(pl.LightningModule):
         flat2 = class_token_224.reshape(1, -1)
         sim_classes = self.cosine_similarity(flat1,flat2)
 
-        return sim_patches, sim_classes
+        return sim_patches.item(), sim_classes.item()
 
     def test_step(self, batch, _):
         x, y = batch
@@ -224,32 +227,29 @@ class ClassificationEvaluator(pl.LightningModule):
         self.log_dict({'acc_56': acc_56, 'acc_224': acc_224}, sync_dist=True, on_epoch=True)
 
         sim_patches, sim_classes = self.sim(x)
-        # Append to CSV
+        self.sim_patches_list.append(sim_patches)
+        self.sim_classes_list.append(sim_classes)
+
+        # Append results to DataFrame if needed
         results = {'Sim Patches': sim_patches, 'Sim Classes': sim_classes}
         results_df = pd.DataFrame([results])
         results_df.to_csv(self.results_path, mode='a', header=not os.path.exists(self.results_path))
+        return results
 
     def test_epoch_end(self, outputs):
-        if self.results_path:
-            acc = self.acc.compute().detach().cpu().item()
-            acc = acc * 100
-            # 让所有进程都执行到这里，但只有主进程进行写入操作
-            if self.trainer.is_global_zero:
-                column_name = f"{self.image_size}_{self.patch_size}"
+        # Calculate mean and variance for sim_patches and sim_classes
+        patches_array = np.array(self.sim_patches_list)
+        classes_array = np.array(self.sim_classes_list)
 
-                if os.path.exists(self.results_path):
-                    # 结果文件已存在，读取现有数据
-                    results_df = pd.read_csv(self.results_path, index_col=0)
-                    # 检查列是否存在，若不存在则添加
-                    results_df[column_name] = acc
-                else:
-                    # 结果文件不存在，创建新的DataFrame
-                    results_df = pd.DataFrame({column_name: [acc]})
-                    # 确保目录存在
-                    os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
+        patches_mean = np.mean(patches_array)
+        patches_var = np.var(patches_array)
+        classes_mean = np.mean(classes_array)
+        classes_var = np.var(classes_array)
 
-                # 保存更新后的结果
-                results_df.to_csv(self.results_path)
+        print(f"Mean and Variance of Sim Patches: Mean = {patches_mean}, Variance = {patches_var}")
+        print(f"Mean and Variance of Sim Classes: Mean = {classes_mean}, Variance = {classes_var}")
+
+
 
 
 if __name__ == "__main__":
