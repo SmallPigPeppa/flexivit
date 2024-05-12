@@ -284,7 +284,7 @@ if __name__ == "__main__":
     subset_indices = np.random.choice(len(val_dataset), 100, replace=False)
     subset_dataset = torch.utils.data.Subset(val_dataset, subset_indices)
 
-    val_loader = DataLoader(subset_dataset, batch_size=args.batch_size, num_workers=args.workers, shuffle=False,
+    val_loader = DataLoader(subset_dataset, batch_size=args.batch_size, num_workers=args.works, shuffle=False,
                             pin_memory=True)
 
     trainer.test(model, dataloaders=val_loader)
