@@ -275,8 +275,10 @@ if __name__ == "__main__":
         os.remove(results_path)
 
     args["model"].results_path = results_path
-    model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True,
-                                                         **args["model"])
+    # model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True,
+    #                                                      **args["model"])
+
+    model = ClassificationEvaluator(**args["model"])
     data_config = timm.data.resolve_model_data_config(model.net)
     val_transform = timm.data.create_transform(**data_config, is_training=False)
     val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
