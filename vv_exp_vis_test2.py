@@ -1,3 +1,14 @@
+from timm import create_model
+
+# model_name = 'vit_base_patch16_224'
+# model_name = 'deit_base_distilled_patch16_224.fb_in1k'
+# model_name = 'vit_base_patch16_clip_224.openai_ft_in1k'
+# model_name = 'pvt_v2_b3.in1k'
+# model_name = 'mobilenetv3_small_050.lamb_in1k'
+# model_name = 'resnet18.a1_in1k'
+model_name = 'vit_base_patch16_224.augreg_in21k_ft_in1k'
+import timm
+
 import os
 from typing import Callable, Optional, Sequence, Union
 import pandas as pd
@@ -245,34 +256,36 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
 
+if __name__ == '__main__':
+    # net = create_model(model_name, pretrained=True)
+    # print(net.default_cfg["architecture"])
+    # model_fn = getattr(timm.models, net.default_cfg["architecture"])
+    # net = model_fn(
+    #     img_size=224,
+    #     patch_size=16,
+    #     num_classes=1000,
+    #     dynamic_img_size=True
+    # )
 
-if __name__ == "__main__":
-    parser = LightningArgumentParser()
-    parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
-    parser.add_lightning_class_args(ClassificationEvaluator, "model")
-    parser.add_argument("--batch_size", type=int, default=256)
-    parser.add_argument("--works", type=int, default=4)
-    parser.add_argument("--root", type=str, default='./data')
-    parser.add_argument("--ckpt_path", type=str, default='./ckpt')
-    args = parser.parse_args()
-    args["logger"] = False  # Disable saving logging artifacts
-    trainer = pl.Trainer.from_argparse_args(args)
+    x = torch.rand(size=(4, 3, 224, 224))
+    m = ClassificationEvaluator(weights=model_name)
+    patch_embeds = m.forward_patch_embed(x)
+    class_tokens = m.forward_class_token(x)
+    y = m.forward(x)
+    print(patch_embeds.shape)
+    print(class_tokens.shape)
+    print(y.shape)
 
-    results_path = "exp_vis/debug.csv"
-    print(f'result save in {results_path} ...')
-    if os.path.exists(results_path):
-        print(f'exist {results_path}, removing ...')
-        os.remove(results_path)
+    x = torch.rand(size=(4, 3, 56, 56))
+    m = ClassificationEvaluator(weights=model_name, image_size=56, patch_size=4)
+    patch_embeds = m.forward_patch_embed(x)
+    class_tokens = m.forward_class_token(x)
+    y = m.forward(x)
+    print(patch_embeds.shape)
+    print(class_tokens.shape)
+    print(y.shape)
 
-    for image_size, patch_size in [(56, 4), (224, 16)]:
-        args["model"].image_size = image_size
-        args["model"].patch_size = patch_size
-        args["model"].results_path = results_path
-        model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True,
-                                                             **args["model"])
-        data_config = timm.data.resolve_model_data_config(model.net)
-        val_transform = timm.data.create_transform(**data_config, is_training=False)
-        val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
-        val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
-                                shuffle=False, pin_memory=True)
-        trainer.test(model, dataloaders=val_loader)
+    patch_stats = m.forward_patch_stats(x)
+    print(patch_stats)
+    class_token_stats = m.forward_class_token_stats(x)
+    print(class_token_stats)
