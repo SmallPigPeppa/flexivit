@@ -161,9 +161,7 @@ class ClassificationEvaluator(pl.LightningModule):
         elif self.net.global_pool:
             x = x[:, 0]  # class token
         return x
-        # x = self.fc_norm(x)
-        # x = self.head_drop(x)
-        # return x if pre_logits else self.head(x)
+
 
     def forward_patch_stats(self, x):
         """Extracts the patch embeddings and computes their mean and variance."""
