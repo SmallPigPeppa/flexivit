@@ -1,4 +1,4 @@
-python exp_vis/vanilla_eval_resize_weight.py \
+python vanilla_eval_resize_weight.py \
   --max_epochs 1 \
   --accelerator gpu \
   --devices 1 \
