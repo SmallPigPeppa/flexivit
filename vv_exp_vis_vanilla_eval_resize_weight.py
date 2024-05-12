@@ -1,6 +1,7 @@
 import os
 from typing import Callable, Optional, Sequence, Union
 import pandas as pd
+import torch
 import pytorch_lightning as pl
 import timm.models
 from pytorch_lightning.cli import LightningArgumentParser
@@ -89,6 +90,35 @@ class ClassificationEvaluator(pl.LightningModule):
     def forward(self, x):
         return self.net(x)
 
+    def forward_patch_embed(self, x):
+        x = self.net.patch_embed(x)
+        return x
+
+    def forward_class_token(self, x):
+        x = self.net.forward_features(x)
+        if self.net.attn_pool is not None:
+            x = self.net.attn_pool(x)
+        elif self.net.global_pool == 'avg':
+            x = x[:, self.net.num_prefix_tokens:].mean(dim=1)
+        elif self.global_pool:
+            x = x[:, 0]  # class token
+        return x
+        # x = self.fc_norm(x)
+        # x = self.head_drop(x)
+        # return x if pre_logits else self.head(x)
+
+    def forward_patch_stats(self, x):
+        """Extracts the patch embeddings and computes their mean and variance."""
+        patch_embeds = self.net.patch_embed(x)  # Assuming patch_embed is accessible like this
+        return patch_embeds.mean(dim=[0, 2, 3]), patch_embeds.var(dim=[0, 2, 3])
+
+    def forward_class_token_stats(self, x):
+        """Extracts the class token and computes its mean and variance."""
+        class_token = self.forward_class_token(x)  # Reuse your forward_class_token method
+        return class_token.mean(dim=0), class_token.var(dim=0)
+
+
+
     def test_step(self, batch, _):
         x, y = batch
         x = F.interpolate(x, size=self.image_size, mode='bilinear')
@@ -101,11 +131,47 @@ class ClassificationEvaluator(pl.LightningModule):
         acc = self.acc(pred, y)
 
         # Log
-        self.log_dict({'test_loss': loss, 'test_acc': acc}, sync_dist=True, on_epoch=True)
+        # self.log_dict({'test_loss': loss, 'test_acc': acc}, sync_dist=True, on_epoch=True)
 
-        return loss
+        # Compute stats for patch embeddings and class tokens
+        patch_mean, patch_var = self.forward_patch_stats(x)
+        class_token_mean, class_token_var = self.forward_class_token_stats(x)
+
+        # Log
+        self.log_dict({
+            'test_loss': loss,
+            'test_acc': acc,
+            'patch_mean': patch_mean,
+            'patch_variance': patch_var,
+            'class_token_mean': class_token_mean,
+            'class_token_variance': class_token_var
+        }, sync_dist=True, on_epoch=True)
+
+        return {
+            'loss': loss,
+            'accuracy': acc,
+            'patch_mean': patch_mean,
+            'patch_variance': patch_var,
+            'class_token_mean': class_token_mean,
+            'class_token_variance': class_token_var
+        }
+
+        # return loss
 
     def test_epoch_end(self, outputs):
+
+        # Example of how to aggregate means and variances across batches
+        avg_patch_mean = torch.stack([x['patch_mean'] for x in outputs]).mean(0)
+        avg_patch_variance = torch.stack([x['patch_variance'] for x in outputs]).mean(0)
+        avg_class_token_mean = torch.stack([x['class_token_mean'] for x in outputs]).mean(0)
+        avg_class_token_variance = torch.stack([x['class_token_variance'] for x in outputs]).mean(0)
+
+        # Log or print final aggregated values
+        print("Average Patch Mean:", avg_patch_mean)
+        print("Average Patch Variance:", avg_patch_variance)
+        print("Average Class Token Mean:", avg_class_token_mean)
+        print("Average Class Token Variance:", avg_class_token_variance)
+
         if self.results_path:
             acc = self.acc.compute().detach().cpu().item()
             acc = acc * 100
