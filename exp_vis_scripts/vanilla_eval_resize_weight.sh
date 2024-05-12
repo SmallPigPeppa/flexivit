@@ -11,7 +11,7 @@ python exp_vis/vanilla_eval_resize_weight.py \
   --model.patch_size 16 \
   --model.image_size 224 \
   --model.resize_type pi \
-  --model.results_path ./debug.csv
+  --model.results_path exp_vis/debug.csv
 
 
 
