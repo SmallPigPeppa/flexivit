@@ -165,7 +165,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def forward_patch_stats(self, x):
         """Extracts the patch embeddings and computes their mean and variance."""
-        patch_embeds = self.net.patch_embed(x)  # Assuming patch_embed is accessible like this
+        patch_embeds = self.forward_patch_embed(x)  # Assuming patch_embed is accessible like this
         return patch_embeds.mean(dim=[0, 1, 2, 3]), patch_embeds.var(dim=[0, 1, 2, 3])
 
     def forward_class_token_stats(self, x):
