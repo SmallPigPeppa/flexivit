@@ -14,7 +14,7 @@ python L2P_train_add_random_resize_4conv_fix14token_2range_deit3b.py \
   --model.image_size 224 \
   --model.results_path ./resize_weight.csv
 
-#python /ppio_net0/code/openapi.py stop 4fca613d27e9ae5f
+python /ppio_net0/code/openapi.py stop 4fca613d27e9ae5f
 
 
 
