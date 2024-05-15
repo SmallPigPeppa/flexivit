@@ -9,7 +9,7 @@ from torch.nn import CrossEntropyLoss
 from torchmetrics.classification.accuracy import Accuracy
 import torch.nn.functional as F
 from flexivit_pytorch import (interpolate_resize_patch_embed, pi_resize_patch_embed)
-from flexivit_pytorch.utils import resize_abs_pos_embed
+from flexivit_pytorch.utils import resize_abs_pos_embed_deit3b as resize_abs_pos_embed
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
