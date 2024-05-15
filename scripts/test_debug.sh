@@ -13,7 +13,7 @@ python eval_debug.py \
   --data.batch_size 1 \
   --model.results_path ./result.csv
 #  --devices 1 \
-#  --data.root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+#  --data.root /ppio_net0/torch_ds/imagenet \
 
 
 
@@ -24,7 +24,7 @@ python eval_debug.py \
 #  --precision 16 \
 #  --model.resize_type pi \
 #  --model.weights vit_base_patch16_224 \
-#  --data.root /mnt/mmtech01/dataset/lzy/ILSVRC2012/val \
+#  --data.root /ppio_net0/torch_ds/imagenet/val \
 #  --data.num_classes 1000 \
 #  --model.patch_size 16 \
 #  --model.ckpt_path ./vit_base_patch16_224.pth \

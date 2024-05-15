@@ -26,7 +26,7 @@ for ckpt_path in "${ckpt_paths[@]}"; do
             --devices 1 \
             --works 4 \
             --batch_size 64 \
-            --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+            --root /ppio_net0/torch_ds/imagenet \
             --ckpt_path ${ckpt_path} \
             --model.resize_type pi \
             --model.weights deit_base_distilled_patch16_224.fb_in1k \

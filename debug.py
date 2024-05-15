@@ -6,7 +6,7 @@ import timm
 from tqdm import tqdm
 
 # ImageNet验证集路径
-imagenet_val_dir = '/mnt/mmtech01/dataset/lzy/ILSVRC2012/val'  # 需要替换为实际路径
+imagenet_val_dir = '/ppio_net0/torch_ds/imagenet/val'  # 需要替换为实际路径
 
 # 创建模型
 # model = timm.create_model('vit_base_patch16_224', pretrained=True)

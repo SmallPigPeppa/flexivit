@@ -5,7 +5,7 @@ python eval_new_new_new.py \
   --precision 16 \
   --model.resize_type pi \
   --model.weights vit_base_patch16_224.augreg_in21k_ft_in1k \
-  --data.root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+  --data.root /ppio_net0/torch_ds/imagenet \
   --data.num_classes 1000 \
   --model.patch_size 16 \
   --model.ckpt_path ./vit_base_patch16_224.augreg_in21k_ft_in1k.pth \
@@ -23,7 +23,7 @@ python eval_new_new_new.py \
 #  --precision 16 \
 #  --model.resize_type pi \
 #  --model.weights vit_base_patch16_224 \
-#  --data.root /mnt/mmtech01/dataset/lzy/ILSVRC2012/val \
+#  --data.root /ppio_net0/torch_ds/imagenet/val \
 #  --data.num_classes 1000 \
 #  --model.patch_size 16 \
 #  --model.ckpt_path ./vit_base_patch16_224.pth \

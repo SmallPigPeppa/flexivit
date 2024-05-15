@@ -4,7 +4,7 @@
 #  --devices 8 \
 #  --works 4 \
 #  --batch_size 32 \
-#  --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+#  --root /ppio_net0/torch_ds/imagenet \
 #  --model.resize_type pi \
 #  --model.weights pvt_v2_b3.in1k \
 #  --model.num_classes 1000 \
@@ -20,7 +20,7 @@
 #  --devices 8 \
 #  --works 4 \
 #  --batch_size 32 \
-#  --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+#  --root /ppio_net0/torch_ds/imagenet \
 #  --model.resize_type pi \
 #  --model.weights mvitv2_small.fb_in1k  \
 #  --model.num_classes 1000 \
@@ -36,7 +36,7 @@
 #  --devices 8 \
 #  --works 4 \
 #  --batch_size 32 \
-#  --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+#  --root /ppio_net0/torch_ds/imagenet \
 #  --model.resize_type pi \
 #  --model.weights deit_base_distilled_patch16_224.fb_in1k  \
 #  --model.num_classes 1000 \
@@ -51,7 +51,7 @@
 #  --devices 8 \
 #  --works 4 \
 #  --batch_size 64 \
-#  --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+#  --root /ppio_net0/torch_ds/imagenet \
 #  --model.weights deit_base_distilled_patch16_224.fb_in1k \
 #  --model.num_classes 1000 \
 #  --model.patch_size 16 \
@@ -66,7 +66,7 @@ python vanilla_eval_resize_weight.py \
   --devices 8 \
   --works 4 \
   --batch_size 64 \
-  --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+  --root /ppio_net0/torch_ds/imagenet \
   --model.weights deit_base_distilled_patch16_224.fb_in1k \
   --model.num_classes 1000 \
   --model.patch_size 16 \

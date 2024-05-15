@@ -5,7 +5,7 @@ python uniViT_4conv_eval_fix_anchor.py \
   --devices 8 \
   --works 4 \
   --batch_size 64 \
-  --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+  --root /ppio_net0/torch_ds/imagenet \
   --ckpt_path ckpt/uniViT/no-random-resize-4conv/last.ckpt \
   --model.resize_type pi \
   --model.weights vit_base_patch16_224.augreg2_in21k_ft_in1k \

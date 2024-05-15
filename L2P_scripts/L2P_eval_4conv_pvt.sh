@@ -29,7 +29,7 @@ for ckpt_path in "${ckpt_paths[@]}"; do
             --devices 8 \
             --works 4 \
             --batch_size 32 \
-            --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
+            --root /ppio_net0/torch_ds/imagenet \
             --ckpt_path ${ckpt_path} \
             --model.resize_type pi \
             --model.weights pvt_v2_b3.in1k \
