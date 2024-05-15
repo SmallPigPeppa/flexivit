@@ -68,7 +68,7 @@ class ClassificationEvaluator(pl.LightningModule):
         if "pos_embed" in state_dict.keys():
             grid_size = self.image_size // self.patch_size
             state_dict["pos_embed"] = resize_abs_pos_embed(
-                state_dict["pos_embed"], new_size=(grid_size, grid_size)
+                state_dict["pos_embed"], new_size=(grid_size, grid_size),num_prefix_tokens=0
             )
 
         # Load adjusted weights into model with target patch and image sizes
