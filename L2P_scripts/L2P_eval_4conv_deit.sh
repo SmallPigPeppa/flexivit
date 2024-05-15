@@ -4,7 +4,8 @@ ckpt_paths=(
 #    "ckpt/L2P/add_random_resize_4conv_fix14token_2range/last.ckpt"
 #    "ckpt/L2P/add_random_resize_4conv_fix14token_24816/last.ckpt"
 #     "ckpt/L2P/add_random_resize_4conv_fix14token_2range_ratio/deit_10epoch/last.ckpt"
-     "ckpt/L2P/add_random_resize_4conv_fix14token_2range/deit/last.ckpt"
+      "ckpt/L2P/add_random_resize_4conv_fix14token_2range/deit/last.ckpt"
+      "ckpt/L2P/add_random_resize_4conv_fix14token_2range/deit3b/last.ckpt"
 )
 # ratio2!!!!!
 scripts=(
