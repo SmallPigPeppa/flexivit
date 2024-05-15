@@ -24,7 +24,7 @@ for ckpt_path in "${ckpt_paths[@]}"; do
             --max_epochs 15 \
             --precision 16 \
             --accelerator gpu \
-            --devices 8 \
+            --devices 1 \
             --works 4 \
             --batch_size 64 \
             --root /mnt/mmtech01/dataset/lzy/ILSVRC2012 \
