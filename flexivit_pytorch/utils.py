@@ -113,7 +113,7 @@ def resize_abs_pos_embed_deit3b(
         posemb_prefix, pos_embed = None, pos_embed
 
 
-    import pdb;pdb.set_trace()
+    # import pdb;pdb.set_trace()
     # Interpolate position embedding
     pos_embed = pos_embed.reshape(1, old_size[0], old_size[1], -1).permute(0, 3, 1, 2)
     pos_embed = F.interpolate(
