@@ -79,7 +79,7 @@
 python vanilla_eval_resize_weight.py \
   --max_epochs 1 \
   --accelerator gpu \
-  --devices 8 \
+  --devices 1 \
   --works 4 \
   --batch_size 64 \
   --root /ppio_net0/torch_ds/imagenet \
@@ -93,7 +93,7 @@ python vanilla_eval_resize_weight.py \
 python vanilla_eval_resize_weight.py \
   --max_epochs 1 \
   --accelerator gpu \
-  --devices 8 \
+  --devices 1 \
   --works 4 \
   --batch_size 64 \
   --root /ppio_net0/torch_ds/imagenet \
