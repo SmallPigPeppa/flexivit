@@ -190,14 +190,14 @@ class ClassificationEvaluator(pl.LightningModule):
             (56, 3, 1),  # (max_size, patch_size, stride)
             (112, 5, 2),
             (168, 7, 3),
-            (224, 7, 4)
+            (448, 14, 8)
         ]
 
         functions = [
             self.patch_embed_3x3_s1,
             self.patch_embed_5x5_s2,
             self.patch_embed_7x7_s3,
-            self.patch_embed_7x7_s4
+            self.patch_embed_7x7_s5
         ]
 
         for (max_size, patch_size, stride), func in zip(conditions, functions):

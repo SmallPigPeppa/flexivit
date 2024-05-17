@@ -190,14 +190,14 @@ class ClassificationEvaluator(pl.LightningModule):
             (56, 3, 1),  # (max_size, patch_size, stride)
             (112, 5, 2),
             (168, 7, 3),
-            (224, 7, 4)
+            (448, 14, 8)
         ]
 
         functions = [
             self.patch_embed_3x3_s1,
             self.patch_embed_5x5_s2,
             self.patch_embed_7x7_s3,
-            self.patch_embed_7x7_s4
+            self.patch_embed_7x7_s5
         ]
 
         for (max_size, patch_size, stride), func in zip(conditions, functions):
@@ -210,7 +210,6 @@ class ClassificationEvaluator(pl.LightningModule):
             #     results.append(torch.zeros(x.size(0), self.num_classes, device=x.device))  # 输出全0，类别数与模型一致
 
         return results
-
     def modified(self):
         self.in_chans = 3
         self.embed_dim = 64
@@ -229,7 +228,7 @@ class ClassificationEvaluator(pl.LightningModule):
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
             origin_weight = self.net.patch_embed.proj.weight.clone().detach()
-            new_weight = pi_resize_patch_embed(
+            new_weight = interpolate_resize_patch_embed(
                 patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
             )
             new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
@@ -253,7 +252,7 @@ if __name__ == "__main__":
     trainer = pl.Trainer.from_argparse_args(args)
 
     # results_path = f"./L2P_exp/{args.ckpt_path.split('/')[-2]}_fix_14token.csv"
-    results_path = f"./L2P_exp/MViTV2_fix_14token_piresize.csv"
+    results_path = f"./L2P_exp/MViTV2_fix_14token_bilinear.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
