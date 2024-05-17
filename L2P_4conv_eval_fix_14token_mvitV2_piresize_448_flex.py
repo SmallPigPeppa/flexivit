@@ -129,9 +129,26 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.net.forward_head(x)
         return x
 
-    def forward_after_patch_embed(self, x):
-        x = self.net.patch_embed.norm(x)
-        x = self.net.stages(x)
+    # def forward_after_patch_embed(self, x):
+    #     x = self.net.patch_embed.norm(x)
+    #     x = self.net.stages(x)
+    #     x = self.net.forward_head(x)
+    #     return x
+
+    def forward_after_patch_embed(self, x, feat_size):
+        B, N, C = x.shape
+        # feat_size = x.shape[-2:]
+        if self.net.cls_token is not None:
+            cls_tokens = self.net.cls_token.expand(B, -1, -1)
+            x = torch.cat((cls_tokens, x), dim=1)
+
+        if self.net.pos_embed is not None:
+            x = x + self.net.pos_embed
+
+        for stage in self.net.stages:
+            x, feat_size = stage(x, feat_size)
+
+        x = self.net.norm(x)
         x = self.net.forward_head(x)
         return x
 
