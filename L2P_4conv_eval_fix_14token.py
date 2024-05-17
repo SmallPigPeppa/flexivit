@@ -231,21 +231,23 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
     trainer = pl.Trainer.from_argparse_args(args)
 
-
-
     results_path = f"./L2P_exp/{args.ckpt_path.split('/')[-2]}_fix_14token.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
         os.remove(results_path)
 
-    for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10),
-                                   (154, 11), (168, 12),(182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
+    for image_size, patch_size in [(448, 32)]:
+        # for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9),
+        #                                    (140, 10),
+        #                                    (154, 11), (168, 12), (182, 13), (196, 14), (210, 15), (224, 16), (238, 17),
+        #                                    (252, 18)]:
 
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         args["model"].results_path = results_path
-        model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True, **args["model"])
+        model = ClassificationEvaluator.load_from_checkpoint(checkpoint_path=args.ckpt_path, strict=True,
+                                                             **args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
         val_transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
