@@ -145,9 +145,16 @@ class ClassificationEvaluator(pl.LightningModule):
         # x_7x7 = F.interpolate(x, size=168, mode='bilinear')
         x_7x7 = self.patch_embed_7x7_s3(x, patch_size=7, stride=3)
 
-        if self.image_size > 28:
-            x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
-            x_7x7_s4 = self.patch_embed_7x7_s4(x_7x7_s4, patch_size=7, stride=4)
+        if self.image_size == 448:
+            x_7x7_s4 = self.patch_embed_7x7_s5(x, patch_size=14, stride=8)
+            return torch.zeros(x.size(0), self.num_classes, device=x.device), \
+                torch.zeros(x.size(0), self.num_classes, device=x.device), \
+                torch.zeros(x.size(0), self.num_classes, device=x.device), \
+                self.forward_after_patch_embed(x_7x7_s4)
+
+        elif self.image_size > 28:
+            # x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
+            x_7x7_s4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
             return self.forward_after_patch_embed(x_3x3), \
                 self.forward_after_patch_embed(x_5x5), \
                 self.forward_after_patch_embed(x_7x7), \
@@ -168,6 +175,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.patch_embed_5x5_s2 = self.get_new_patch_embed(new_patch_size=5, new_stride=2)
         self.patch_embed_7x7_s3 = self.get_new_patch_embed(new_patch_size=7, new_stride=3)
         self.patch_embed_7x7_s4 = self.get_new_patch_embed(new_patch_size=7, new_stride=4)
+        self.patch_embed_7x7_s5 = self.get_new_patch_embed(new_patch_size=14, new_stride=8)
 
     def get_new_patch_embed(self, new_patch_size, new_stride):
         new_patch_embed = FlexiOverlapPatchEmbed(
@@ -208,13 +216,14 @@ if __name__ == "__main__":
         print(f'exist {results_path}, removing ...')
         os.remove(results_path)
 
-    for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10),
-                                   (154, 11), (168, 12), (182, 13), (196, 14), (210, 15), (224, 16), (238, 17),
-                                   (252, 18)]:
+    # for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10),
+    #                                (154, 11), (168, 12), (182, 13), (196, 14), (210, 15), (224, 16), (238, 17),
+    #                                (252, 18)]:
         # for image_size, patch_size in [(42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9),(140, 10),
         #                                (154, 11), (168, 12), (182, 13), (196, 14), (210, 15), (224, 16), (238, 17),
         #                                (252, 18)]:
         # for image_size, patch_size in [(28, 2)]:
+    for image_size, patch_size in [(448, 16)]:
 
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
