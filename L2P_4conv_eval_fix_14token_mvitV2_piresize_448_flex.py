@@ -154,33 +154,33 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def ms_forward(self, x):
         # x_3x3 = F.interpolate(x, size=56, mode='bilinear')
-        x_3x3 = self.patch_embed_3x3_s1(x, patch_size=3, stride=1)
+        x_3x3,size3 = self.patch_embed_3x3_s1(x, patch_size=3, stride=1)
 
         # x_5x5 = F.interpolate(x, size=112, mode='bilinear')
-        x_5x5 = self.patch_embed_5x5_s2(x, patch_size=5, stride=2)
+        x_5x5,size5 = self.patch_embed_5x5_s2(x, patch_size=5, stride=2)
 
         # x_7x7 = F.interpolate(x, size=168, mode='bilinear')
-        x_7x7 = self.patch_embed_7x7_s3(x, patch_size=7, stride=3)
+        x_7x7,size7 = self.patch_embed_7x7_s3(x, patch_size=7, stride=3)
 
         if self.image_size == 448:
-            x_7x7_s4 = self.patch_embed_7x7_s5(x, patch_size=14, stride=8)
+            x_7x7_s4,sizes4 = self.patch_embed_7x7_s5(x, patch_size=14, stride=8)
             return torch.zeros(x.size(0), self.num_classes, device=x.device), \
                 torch.zeros(x.size(0), self.num_classes, device=x.device), \
                 torch.zeros(x.size(0), self.num_classes, device=x.device), \
-                self.forward_after_patch_embed(x_7x7_s4)
+                self.forward_after_patch_embed(x_7x7_s4,sizes4)
 
         elif self.image_size > 28:
             # x_7x7_s4 = F.interpolate(x, size=224, mode='bilinear')
-            x_7x7_s4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
-            return self.forward_after_patch_embed(x_3x3), \
-                self.forward_after_patch_embed(x_5x5), \
-                self.forward_after_patch_embed(x_7x7), \
-                self.forward_after_patch_embed(x_7x7_s4)
+            x_7x7_s4,sizes4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
+            return self.forward_after_patch_embed(x_3x3,size3), \
+                self.forward_after_patch_embed(x_5x5,size5), \
+                self.forward_after_patch_embed(x_7x7,size7), \
+                self.forward_after_patch_embed(x_7x7_s4,sizes4)
 
         else:
-            return self.forward_after_patch_embed(x_3x3), \
-                self.forward_after_patch_embed(x_5x5), \
-                self.forward_after_patch_embed(x_7x7), \
+            return self.forward_after_patch_embed(x_3x3,size3), \
+                self.forward_after_patch_embed(x_5x5,size5), \
+                self.forward_after_patch_embed(x_7x7,size7), \
                 torch.zeros(x.size(0), self.num_classes, device=x.device)
         # x_7x7_s4 = self.patch_embed_7x7_s4(x, patch_size=7, stride=4)
 
