@@ -260,6 +260,6 @@ if __name__ == "__main__":
         data_config = timm.data.resolve_model_data_config(model.net)
         val_transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=val_transform)
-        val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
+        val_loader = DataLoader(val_dataset, batch_size=1024, num_workers=args.works,
                                 shuffle=False, pin_memory=True)
         trainer.test(model, dataloaders=val_loader)
