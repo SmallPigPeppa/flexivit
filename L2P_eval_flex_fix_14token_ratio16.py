@@ -80,23 +80,16 @@ class ClassificationEvaluator(pl.LightningModule):
         x = F.interpolate(x, size=[self.patch_size_0 * 14, self.patch_size_1 * 14], mode='bilinear')
 
         # Pass through network
-        pred0, pred1, pred2, pred3 = self.ms_forward(x)
+        pred = self.origin_forward(x)
 
         # Get accuracy
-        acc_0 = self.acc_0(pred0, y)
-        acc_1 = self.acc_1(pred1, y)
-        acc_2 = self.acc_2(pred2, y)
-        acc_3 = self.acc_3(pred3, y)
-
+        acc = self.acc(pred, y)
         # Log
         out_dict = {
             # 'res': str([self.patch_size_0 * 14, self.patch_size_1 * 14]),
             'patch_size_0': self.patch_size_0,
             'patch_size_1': self.patch_size_1,
-            'test_acc_0': acc_0,
-            'test_acc_1': acc_1,
-            'test_acc_2': acc_2,
-            'test_acc_3': acc_3
+            'test_acc': acc,
         }
         self.log_dict(out_dict, sync_dist=True, on_epoch=True)
 
@@ -105,11 +98,9 @@ class ClassificationEvaluator(pl.LightningModule):
     def test_epoch_end(self, outputs):
         if self.results_path:
             # 计算每个acc并乘以100
-            acc_0 = self.acc_0.compute().detach().cpu().item() * 100
-            acc_1 = self.acc_1.compute().detach().cpu().item() * 100
-            acc_2 = self.acc_2.compute().detach().cpu().item() * 100
-            acc_3 = self.acc_3.compute().detach().cpu().item() * 100
-            max_acc = max(acc_0, acc_1, acc_2, acc_3)
+
+            acc = self.acc.compute().detach().cpu().item() * 100
+
 
             # 确保所有进程都执行到这里，但只有主进程进行写入操作
             if self.trainer.is_global_zero:
@@ -123,16 +114,12 @@ class ClassificationEvaluator(pl.LightningModule):
                         results_df[column_name] = [None] * len(results_df)  # 先添加空列，防止DataFrame对齐问题
                 else:
                     # 结果文件不存在，创建新的DataFrame，此时有5行
-                    results_df = pd.DataFrame(columns=[column_name], index=['acc0', 'acc1', 'acc2', 'acc3', 'max_acc'])
+                    results_df = pd.DataFrame(columns=[column_name], index=['acc'])
                     # 确保目录存在
                     os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
 
                 # 更新DataFrame中的值
-                results_df.at['acc0', column_name] = acc_0
-                results_df.at['acc1', column_name] = acc_1
-                results_df.at['acc2', column_name] = acc_2
-                results_df.at['acc3', column_name] = acc_3
-                results_df.at['max_acc', column_name] = max_acc
+                results_df.at['acc', column_name] = acc
 
                 # 保存更新后的结果
                 results_df.to_csv(self.results_path)
@@ -179,6 +166,10 @@ class ClassificationEvaluator(pl.LightningModule):
         x_3 = self.patch_embed_16x16(x, patch_size=[self.patch_size_0, self.patch_size_1])
 
         return self(x_0), self(x_1), self(x_2), self(x_3)
+
+    def origin_forward(self, x: torch.Tensor) -> torch.Tensor:
+        x_0 = self.patch_embed_16x16_origin(x, patch_size=[self.patch_size_0, self.patch_size_1])
+        return self(x_0)
 
     def modified(self, new_image_size=224, new_patch_size=16):
         self.embed_args = {}
@@ -233,7 +224,7 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
     trainer = pl.Trainer.from_argparse_args(args)
 
-    results_path = f"./L2P_exp_ratio/{args.ckpt_path.split('/')[-2]}_fix_14token_ratio8.csv"
+    results_path = f"./L2P_exp_ratio/flex_fix_14token_ratio16.csv"
     print(f'result save in {results_path} ...')
     if os.path.exists(results_path):
         print(f'exist {results_path}, removing ...')
@@ -243,11 +234,8 @@ if __name__ == "__main__":
     #                                    (8, 10), (8, 12), (8, 14), (8, 16), (12, 6), (12, 9), (12, 12), (12, 15),
     #                                    (12, 18), (12, 21), (12, 24), (16, 8), (16, 12), (16, 16), (16, 20), (16, 24),
     #                                    (16, 28), (16, 32)]:
-    # for patch_size_0, patch_size_1 in [(4, 8), (5, 8), (6, 8), (7, 8), (8, 8), (8, 9), (8, 10), (8, 11), (8, 12),
-    #                                    (8, 13), (8, 14), (8, 15), (8, 16)]:
-    # for patch_size_0, patch_size_1 in [(4, 16), (6, 16), (8, 16), (10, 16), (12, 16), (14, 16), (16, 16), (18, 16),(20, 16),
-    #                                    (22, 16), (24, 16),(26, 16), (28, 16), (30, 16), (32, 16)]:
-    for patch_size_0, patch_size_1 in [(4, 16), (6, 16), (8, 16),  (12, 16),  (16, 16), (22, 16), (24, 16), (28, 16), (30, 16), (32, 16)]:
+    for patch_size_0, patch_size_1 in [(4, 16), (6, 16), (8, 16), (10, 16), (12, 16), (14, 16), (16, 16),
+                                       (20, 16), (22, 16), (24, 16),(26,16), (28,16), (30, 16), (32, 16)]:
         args["model"].image_size = 224
         args["model"].patch_size = 16
         args["model"].results_path = results_path
