@@ -26,7 +26,7 @@ for ckpt_path in "${ckpt_paths[@]}"; do
             --precision 16 \
             --accelerator gpu \
             --devices 1 \
-            --works 4 \
+            --works 8 \
             --batch_size 512 \
             --root /ppio_net0/torch_ds/imagenet \
             --ckpt_path ${ckpt_path} \
