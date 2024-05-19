@@ -177,8 +177,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         params_to_optimize = list(self.patch_embed_4x4.parameters()) + \
                              list(self.patch_embed_8x8.parameters()) + \
-                             list(self.patch_embed_12x12.parameters()) + \
-                             list(self.patch_embed_16x16.parameters())
+                             list(self.patch_embed_12x12.parameters())
 
         optimizer = torch.optim.SGD(
             params_to_optimize,
