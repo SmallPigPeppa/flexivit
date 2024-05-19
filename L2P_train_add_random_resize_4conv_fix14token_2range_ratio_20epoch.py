@@ -320,7 +320,7 @@ if __name__ == "__main__":
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
     parser.add_lightning_class_args(ClassificationEvaluator, "model")
     parser.add_argument("--batch_size", type=int, default=256)
-    parser.add_argument("--works", type=int, default=4)
+    parser.add_argument("--works", type=int, default=8)
     parser.add_argument("--root", type=str, default='./data')
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
