@@ -75,7 +75,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.loss_fn = CrossEntropyLoss()
 
         # modified
-        self.mode = 'area'
+        self.mode = 'bicubic'
         self.modified(new_image_size=self.image_size, new_patch_size=self.patch_size)
 
 
@@ -331,10 +331,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    wandb_logger = WandbLogger(name='area_heuristic', project='MSPE-ab',
+    wandb_logger = WandbLogger(name='bicubic', project='MSPE-ab',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/MSPE-ab/area_heuristic',
+                                          dirpath='ckpt/MSPE-ab/bicubic',
                                           save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
