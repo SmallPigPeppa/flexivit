@@ -107,7 +107,7 @@ class ClassificationEvaluator(pl.LightningModule):
         self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
         return out_dict
 
-    def validation_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx):
         x, y = batch
         logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.rand_ms_forward(x)
         loss_4x4 = self.loss_fn(logits_4x4, y)
@@ -119,7 +119,8 @@ class ClassificationEvaluator(pl.LightningModule):
         loss_16x16 = self.loss_fn(logits_16x16, y)
         acc_16x16 = self.acc(logits_16x16, y)
 
-        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16
+
+        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 * 0.
         out_dict = {'val_loss': loss,
                     'val_loss_4x4': loss_4x4,
                     'val_loss_8x8': loss_8x8,
