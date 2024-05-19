@@ -79,7 +79,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        logits_4x4, logits_8x8, logits_12x12, logits_16x16, logits_origin = self.ms_forward(x)
+        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.rand_ms_forward(x)
         loss_4x4 = self.loss_fn(logits_4x4, y)
         acc_4x4 = self.acc(logits_4x4, y)
         loss_8x8 = self.loss_fn(logits_8x8, y)
@@ -89,10 +89,8 @@ class ClassificationEvaluator(pl.LightningModule):
         loss_16x16 = self.loss_fn(logits_16x16, y)
         acc_16x16 = self.acc(logits_16x16, y)
 
-        loss_origin = self.loss_fn(logits_origin, y)
-        acc_origin = self.acc(logits_origin, y)
 
-        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_origin * 2
+        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 * 2.
         out_dict = {'loss': loss,
                     'train_loss_4x4': loss_4x4,
                     'train_loss_8x8': loss_8x8,
@@ -107,9 +105,9 @@ class ClassificationEvaluator(pl.LightningModule):
         self.log_dict(out_dict, on_step=False, sync_dist=True, on_epoch=True)
         return out_dict
 
-    def training_step(self, batch, batch_idx):
+    def validation_step(self, batch, batch_idx):
         x, y = batch
-        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.rand_ms_forward(x)
+        logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.ms_forward(x)
         loss_4x4 = self.loss_fn(logits_4x4, y)
         acc_4x4 = self.acc(logits_4x4, y)
         loss_8x8 = self.loss_fn(logits_8x8, y)
@@ -119,8 +117,7 @@ class ClassificationEvaluator(pl.LightningModule):
         loss_16x16 = self.loss_fn(logits_16x16, y)
         acc_16x16 = self.acc(logits_16x16, y)
 
-
-        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 * 2
+        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16
         out_dict = {'val_loss': loss,
                     'val_loss_4x4': loss_4x4,
                     'val_loss_8x8': loss_8x8,
@@ -280,7 +277,6 @@ class ClassificationEvaluator(pl.LightningModule):
         img_size_16x16_1 = token_num_16x16 * patch_size_16x16_1
         x_16x16 = F.interpolate(x, size=(img_size_16x16_0, img_size_16x16_1), mode='bilinear')
         x_16x16 = self.patch_embed_16x16(x_16x16, patch_size=[patch_size_16x16_0, patch_size_16x16_1])
-
 
 
         return self(x_4x4), self(x_8x8), self(x_12x12), self(x_16x16)
