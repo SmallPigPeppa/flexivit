@@ -1,14 +1,14 @@
 ckpt_paths=(
 #    "ckpt/L2P/add_random_resize_4conv_fix14token_24816_ratio/last.ckpt"
-#    "ckpt/L2P/add_random_resize_4conv_fix14token_2range_ratio/last.ckpt"
-#    "ckpt/L2P/add_random_resize_4conv_fix14token_2range/last.ckpt"
+    "ckpt/L2P/add_random_resize_4conv_fix14token_2range_ratio/last.ckpt"
+    "ckpt/L2P/add_random_resize_4conv_fix14token_2range/last.ckpt"
 #    "ckpt/L2P/add_random_resize_4conv_fix14token_24816/last.ckpt"
 )
 # ratio2!!!!!
 scripts=(
-#    "L2P_4conv_eval_fix_14token.py"
+    "L2P_4conv_eval_fix_14token.py"
 #    "L2P_4conv_eval_fix_14token_ratio.py"
-     "L2P_4conv_eval_fix_14token_ratio2.py"
+#     "L2P_4conv_eval_fix_14token_ratio2.py"
 #    "L2P_4conv_eval_fix_anchor.py"
 #    "L2P_4conv_eval_fix_14token_24816.py"
 #    "L2P_4conv_eval_fix_anchor_24816.py"
