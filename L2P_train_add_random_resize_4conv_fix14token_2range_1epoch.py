@@ -77,6 +77,7 @@ class ClassificationEvaluator(pl.LightningModule):
         # modified
         self.modified(new_image_size=self.image_size, new_patch_size=self.patch_size)
 
+
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits_4x4, logits_8x8, logits_12x12, logits_16x16 = self.rand_ms_forward(x)
@@ -179,21 +180,22 @@ class ClassificationEvaluator(pl.LightningModule):
                              list(self.patch_embed_12x12.parameters()) + \
                              list(self.patch_embed_16x16.parameters())
 
+
         optimizer = torch.optim.SGD(
             params_to_optimize,
             lr=self.lr,
             weight_decay=self.wd,
             momentum=0.9)
 
-
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
-            warmup_epochs=5,
+            warmup_epochs=self.max_epochs,
             max_epochs=self.max_epochs,
             warmup_start_lr=0.01 * self.lr,
             eta_min=0.01 * self.lr,
         )
         return [optimizer], [scheduler]
+
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
@@ -242,36 +244,28 @@ class ClassificationEvaluator(pl.LightningModule):
         # 随机选择token数量，对应的分辨率是token数量乘以patch_size
         # random.choice([6, 8, 10])
         token_num_4x4 = 14
-        patch_size_4x4_0 = random.randint(2, 8)
-        patch_size_4x4_1 = random.randint(2, 8)
-        img_size_4x4_0 = token_num_4x4 * patch_size_4x4_0
-        img_size_4x4_1 = token_num_4x4 * patch_size_4x4_1
-        x_4x4 = F.interpolate(x, size=(img_size_4x4_0, img_size_4x4_1), mode='bilinear')
-        x_4x4 = self.patch_embed_4x4(x_4x4, patch_size=[patch_size_4x4_0, patch_size_4x4_1])
+        patch_size_4x4 = random.randint(2, 8)
+        img_size_4x4 = token_num_4x4 * patch_size_4x4
+        x_4x4 = F.interpolate(x, size=(img_size_4x4, img_size_4x4), mode='bilinear')
+        x_4x4 = self.patch_embed_4x4(x_4x4, patch_size=patch_size_4x4)
 
         token_num_8x8 = 14
-        patch_size_8x8_0 = random.randint(4, 16)
-        patch_size_8x8_1 = random.randint(4, 16)
-        img_size_8x8_0 = token_num_8x8 * patch_size_8x8_0
-        img_size_8x8_1 = token_num_8x8 * patch_size_8x8_1
-        x_8x8 = F.interpolate(x, size=(img_size_8x8_0, img_size_8x8_1), mode='bilinear')
-        x_8x8 = self.patch_embed_8x8(x_8x8, patch_size=[patch_size_8x8_0, patch_size_8x8_1])
+        patch_size_8x8 = random.randint(4, 16)
+        img_size_8x8 = token_num_8x8 * patch_size_8x8
+        x_8x8 = F.interpolate(x, size=(img_size_8x8, img_size_8x8), mode='bilinear')
+        x_8x8 = self.patch_embed_8x8(x_8x8, patch_size=patch_size_8x8)
 
         token_num_12x12 = 14
-        patch_size_12x12_0 = random.randint(6, 24)
-        patch_size_12x12_1 = random.randint(6, 24)
-        img_size_12x12_0 = token_num_12x12 * patch_size_12x12_0
-        img_size_12x12_1 = token_num_12x12 * patch_size_12x12_1
-        x_12x12 = F.interpolate(x, size=(img_size_12x12_0, img_size_12x12_1), mode='bilinear')
-        x_12x12 = self.patch_embed_12x12(x_12x12, patch_size=[patch_size_12x12_0, patch_size_12x12_1])
+        patch_size_12x12 = random.randint(6, 24)
+        img_size_12x12 = token_num_12x12 * patch_size_12x12
+        x_12x12 = F.interpolate(x, size=(img_size_12x12, img_size_12x12), mode='bilinear')
+        x_12x12 = self.patch_embed_12x12(x_12x12, patch_size=patch_size_12x12)
 
         token_num_16x16 = 14
-        patch_size_16x16_0 = random.randint(8, 32)
-        patch_size_16x16_1 = random.randint(8, 32)
-        img_size_16x16_0 = token_num_16x16 * patch_size_16x16_0
-        img_size_16x16_1 = token_num_16x16 * patch_size_16x16_1
-        x_16x16 = F.interpolate(x, size=(img_size_16x16_0, img_size_16x16_1), mode='bilinear')
-        x_16x16 = self.patch_embed_16x16(x_16x16, patch_size=[patch_size_16x16_0, patch_size_16x16_1])
+        patch_size_16x16 = random.randint(8, 32)
+        img_size_16x16 = token_num_16x16 * patch_size_16x16
+        x_16x16 = F.interpolate(x, size=(img_size_16x16, img_size_16x16), mode='bilinear')
+        x_16x16 = self.patch_embed_16x16(x_16x16, patch_size=patch_size_16x16)
 
         return self(x_4x4), self(x_8x8), self(x_12x12), self(x_16x16)
 
@@ -305,21 +299,16 @@ class ClassificationEvaluator(pl.LightningModule):
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
             origin_weight = self.net.patch_embed.proj.weight.clone().detach()
-            # new_weight = pi_resize_patch_embed(
-            #     patch_embed=self.origin_state_dict["patch_embed.proj.weight"],
-            #     new_patch_size=(new_patch_size, new_patch_size)
-            # )
             new_weight = pi_resize_patch_embed(
                 patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
             )
             new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
         if self.net.patch_embed.proj.bias is not None:
-            # new_patch_embed.proj.bias = nn.Parameter(torch.tensor(self.origin_state_dict["patch_embed.proj.bias"]),
-            #                                          requires_grad=True)
             new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
                                                      requires_grad=True)
 
         return new_patch_embed
+
 
 
 if __name__ == "__main__":
@@ -332,10 +321,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    wandb_logger = WandbLogger(name='ab-10epoch-ratio', project='MSPE-ab',
+    wandb_logger = WandbLogger(name='ab-1epoch', project='MSPE-ab',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/MSPE-ab/10-epoch-ratio',
+                                          dirpath='ckpt/MSPE-ab/1-epoch',
                                           save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])

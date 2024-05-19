@@ -305,17 +305,11 @@ class ClassificationEvaluator(pl.LightningModule):
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
             origin_weight = self.net.patch_embed.proj.weight.clone().detach()
-            # new_weight = pi_resize_patch_embed(
-            #     patch_embed=self.origin_state_dict["patch_embed.proj.weight"],
-            #     new_patch_size=(new_patch_size, new_patch_size)
-            # )
             new_weight = pi_resize_patch_embed(
                 patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
             )
             new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
         if self.net.patch_embed.proj.bias is not None:
-            # new_patch_embed.proj.bias = nn.Parameter(torch.tensor(self.origin_state_dict["patch_embed.proj.bias"]),
-            #                                          requires_grad=True)
             new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
                                                      requires_grad=True)
 

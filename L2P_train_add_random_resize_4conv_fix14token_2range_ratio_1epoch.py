@@ -185,10 +185,15 @@ class ClassificationEvaluator(pl.LightningModule):
             weight_decay=self.wd,
             momentum=0.9)
 
+        # optimizer = torch.optim.SGD(
+        #     self.parameters(),
+        #     lr=self.lr,
+        #     weight_decay=self.wd,
+        #     momentum=0.9)
 
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
-            warmup_epochs=5,
+            warmup_epochs=self.max_epochs,
             max_epochs=self.max_epochs,
             warmup_start_lr=0.01 * self.lr,
             eta_min=0.01 * self.lr,
@@ -332,10 +337,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    wandb_logger = WandbLogger(name='ab-10epoch-ratio', project='MSPE-ab',
+    wandb_logger = WandbLogger(name='ab-1epoch-ratio', project='MSPE-ab',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(monitor="val_acc_16x16", mode="max",
-                                          dirpath='ckpt/MSPE-ab/10-epoch-ratio',
+                                          dirpath='ckpt/MSPE-ab/1-epoch-ratio',
                                           save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
