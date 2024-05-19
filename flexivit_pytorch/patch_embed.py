@@ -74,7 +74,7 @@ def interpolate_resize_patch_embed(
     patch_embed: Tensor,
     new_patch_size: Tuple[int, int],
     interpolation: str = "bicubic",
-    antialias: bool = True,
+    antialias: bool = False,
 ):
     """Resample patch embedding weights to a target resolution via interpolation
 
