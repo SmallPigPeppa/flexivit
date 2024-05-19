@@ -21,8 +21,8 @@ for ckpt_path in "${ckpt_paths[@]}"; do
             --max_epochs 15 \
             --precision 16 \
             --accelerator gpu \
-            --devices 8 \
-            --works 4 \
+            --devices 1 \
+            --works 8 \
             --batch_size 64 \
             --root /ppio_net0/torch_ds/imagenet \
             --ckpt_path ${ckpt_path} \
