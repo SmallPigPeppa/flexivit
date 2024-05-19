@@ -5,7 +5,7 @@ python L2P_train_add_random_resize_4conv_fix14token_2range_ratio_3epoch.py \
   --devices 8 \
   --works 8 \
   --batch_size 32 \
-  --root /ppio_net0/torch_ds/imagenet \
+  --root /workspace/torch_ds/imagenet \
   --model.resize_type pi \
   --model.weights vit_base_patch16_224.augreg2_in21k_ft_in1k \
   --model.num_classes 1000 \
