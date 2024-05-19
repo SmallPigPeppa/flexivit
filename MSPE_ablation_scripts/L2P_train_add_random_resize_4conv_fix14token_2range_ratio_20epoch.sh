@@ -3,7 +3,7 @@ python L2P_train_add_random_resize_4conv_fix14token_2range_ratio_20epoch.py \
   --precision 16 \
   --accelerator gpu \
   --devices 8 \
-  --works 4 \
+  --works 8 \
   --batch_size 32 \
   --root /ppio_net0/torch_ds/imagenet \
   --model.resize_type pi \
