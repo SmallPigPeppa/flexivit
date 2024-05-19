@@ -1,5 +1,5 @@
 ckpt_paths=(
-    "ckpt/MSPE-ab/1-epoch-ratio/last.ckpt"
+    "ckpt/MSPE-ab/2-epoch-ratio/last.ckpt"
 #    "ckpt/MSPE-ab/10-epoch-ratio/last.ckpt"
 )
 scripts=(
