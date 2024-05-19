@@ -4,7 +4,7 @@ python L2P_train_add_random_resize_4conv_fix14token_2range_ratio_10epoch.py \
   --accelerator gpu \
   --strategy ddp \
   --devices 8 \
-  --works 8 \
+  --works 4 \
   --batch_size 32 \
   --root /ppio_net0/torch_ds/imagenet \
   --model.resize_type pi \
