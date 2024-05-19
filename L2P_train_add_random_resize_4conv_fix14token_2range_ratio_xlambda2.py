@@ -120,7 +120,7 @@ class ClassificationEvaluator(pl.LightningModule):
         acc_16x16 = self.acc(logits_16x16, y)
 
 
-        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 * 0.
+        loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16 * 2
         out_dict = {'val_loss': loss,
                     'val_loss_4x4': loss_4x4,
                     'val_loss_8x8': loss_8x8,
