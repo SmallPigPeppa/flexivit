@@ -43,3 +43,4 @@ python L2P_train_add_random_resize_4conv_fix14token_2range_ratio_bicubic.py \
   --model.image_size 224 \
   --model.results_path ./resize_weight.csv
 
+
