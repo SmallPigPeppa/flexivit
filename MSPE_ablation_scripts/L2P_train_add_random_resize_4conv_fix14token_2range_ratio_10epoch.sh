@@ -2,6 +2,7 @@ python L2P_train_add_random_resize_4conv_fix14token_2range_ratio_10epoch.py \
   --max_epochs 10 \
   --precision 16 \
   --accelerator gpu \
+  --strategy ddp \
   --devices 8 \
   --works 8 \
   --batch_size 32 \
