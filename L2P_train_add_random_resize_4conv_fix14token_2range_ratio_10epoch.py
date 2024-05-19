@@ -353,20 +353,10 @@ if __name__ == "__main__":
                                 shuffle=False, pin_memory=True)
         train_transform = timm.data.create_transform(**data_config, is_training=True)
         train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
-        # train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=8,
-        #                           shuffle=True, pin_memory=True, prefetch_factor=4)
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
-        # trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
+        trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
         # trainer.test(model, dataloaders=val_loader)
 
 
-        with torch.profiler.profile(
-                schedule=torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=2),
-                on_trace_ready=torch.profiler.tensorboard_trace_handler('./log/profiler'),
-                record_shapes=True,
-                profile_memory=True,
-                with_stack=True
-        ) as prof:
-            trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 
