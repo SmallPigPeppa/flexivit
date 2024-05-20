@@ -1,6 +1,6 @@
 ckpt_paths=(
-    "ckpt/MSPE-ab/1-epoch-ratio/last.ckpt"
-#    "ckpt/MSPE-ab/10-epoch-ratio/last.ckpt"
+    "ckpt/MSPE-ab/xlambda0/last.ckpt"
+    "ckpt/MSPE-ab/xlambda2/last.ckpt"
 )
 scripts=(
      "L2P_4conv_eval_fix_14token.py"
