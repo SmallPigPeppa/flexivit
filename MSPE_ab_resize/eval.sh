@@ -1,9 +1,8 @@
 ckpt_paths=(
-    "ckpt/MSPE-ab/1-epoch-ratio/last.ckpt"
-#    "ckpt/MSPE-ab/10-epoch-ratio/last.ckpt"
+    "ckpt/MSPE-ab/area_heuristic/last.ckpt"
 )
 scripts=(
-     "L2P_4conv_eval_fix_14token.py"
+     "L2P_4conv_eval_fix_14token_resize_mode.py"
 )
 
 
@@ -18,6 +17,7 @@ for ckpt_path in "${ckpt_paths[@]}"; do
             --batch_size 64 \
             --root /ppio_net0/torch_ds/imagenet \
             --ckpt_path ${ckpt_path} \
+            --mode area \
             --model.resize_type pi \
             --model.weights vit_base_patch16_224.augreg2_in21k_ft_in1k \
             --model.num_classes 1000 \
