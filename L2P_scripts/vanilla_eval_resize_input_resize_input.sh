@@ -1,9 +1,9 @@
 python vanilla_eval_resize_input_new_448.py \
   --max_epochs 1 \
   --accelerator gpu \
-  --devices 8 \
+  --devices 1 \
   --works 4 \
-  --batch_size 32 \
+  --batch_size 64 \
   --root /ppio_net0/torch_ds/imagenet \
   --model.resize_type pi \
   --model.weights deit3_base_patch16_224.fb_in22k_ft_in1k  \
