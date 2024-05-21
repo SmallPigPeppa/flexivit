@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     for image_size, patch_size in [(28, 16), (42, 16), (56, 16), (70, 16), (84, 16), (98, 16), (112, 16), (126, 16),
                                    (140, 16), (154, 16), (168, 16), (182, 16), (196, 16), (210, 16), (224, 16),
-                                   (238, 16), (252, 16)]:
+                                   (238, 16), (252, 16), (448, 16)]:
         args["model"].image_size = 224
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
