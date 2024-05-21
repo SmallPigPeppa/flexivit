@@ -24,3 +24,4 @@ for ckpt_path in "${ckpt_paths[@]}"; do
             --model.image_size 224
     done
 done
+
