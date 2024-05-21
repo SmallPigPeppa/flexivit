@@ -4,7 +4,7 @@ ckpt_paths=(
 
 scripts=(
      "L2P_eval_flex_fix_14token_ratio8.py"
-#     "L2P_eval_bilinear_fix_14token_ratio8.py"
+     "L2P_eval_bilinear_fix_14token_ratio8.py"
 )
 
 
