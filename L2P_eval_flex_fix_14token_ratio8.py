@@ -236,6 +236,7 @@ if __name__ == "__main__":
     #                                    (16, 28), (16, 32)]:
     for patch_size_0, patch_size_1 in [(2, 8), (3, 8), (4, 8), (5, 8), (6, 8), (7, 8), (8, 8),
                                        (10, 8), (12, 8), (14, 8), (16, 8), (20, 8), (24, 8), (28, 8), (32, 8)]:
+    # for patch_size_0, patch_size_1 in [(56, 8)]:
         args["model"].image_size = 224
         args["model"].patch_size = 16
         args["model"].results_path = results_path
