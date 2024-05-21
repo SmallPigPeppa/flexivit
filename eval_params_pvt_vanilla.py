@@ -45,9 +45,9 @@ class ClassificationEvaluator(pl.LightningModule):
         self.dynamic_img_pad = False
         # if self.net.dynamic_img_size:
         #     self.embed_args.update(dict(strict_img_size=False, output_fmt='NHWC'))
-        self.patch_embed_3x3_s1 = self.get_new_patch_embed(new_patch_size=3, new_stride=1)
-        self.patch_embed_5x5_s2 = self.get_new_patch_embed(new_patch_size=5, new_stride=2)
-        self.patch_embed_7x7_s3 = self.get_new_patch_embed(new_patch_size=7, new_stride=3)
+        # self.patch_embed_3x3_s1 = self.get_new_patch_embed(new_patch_size=3, new_stride=1)
+        # self.patch_embed_5x5_s2 = self.get_new_patch_embed(new_patch_size=5, new_stride=2)
+        # self.patch_embed_7x7_s3 = self.get_new_patch_embed(new_patch_size=7, new_stride=3)
         self.patch_embed_7x7_s4 = self.get_new_patch_embed(new_patch_size=7, new_stride=4)
 
     def get_new_patch_embed(self, new_patch_size, new_stride):
