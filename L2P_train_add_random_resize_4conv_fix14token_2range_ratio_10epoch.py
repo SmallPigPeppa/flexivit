@@ -89,6 +89,8 @@ class ClassificationEvaluator(pl.LightningModule):
         loss_16x16 = self.loss_fn(logits_16x16, y)
         acc_16x16 = self.acc(logits_16x16, y)
 
+        i = (n + 1)/4
+
         loss = loss_4x4 + loss_8x8 + loss_12x12 + loss_16x16
         out_dict = {'loss': loss,
                     'train_loss_4x4': loss_4x4,
@@ -184,7 +186,6 @@ class ClassificationEvaluator(pl.LightningModule):
             lr=self.lr,
             weight_decay=self.wd,
             momentum=0.9)
-
 
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
@@ -357,6 +358,3 @@ if __name__ == "__main__":
                                   shuffle=True, pin_memory=True)
         trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
         # trainer.test(model, dataloaders=val_loader)
-
-
-

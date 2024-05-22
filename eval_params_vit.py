@@ -13,6 +13,7 @@ from flexivit_pytorch import pi_resize_patch_embed
 def count_parameters(model: nn.Module) -> int:
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
+
 class ClassificationEvaluator(pl.LightningModule):
     def __init__(self, weights: str = ''):
         super().__init__()
@@ -21,7 +22,6 @@ class ClassificationEvaluator(pl.LightningModule):
         print(f"Loading weights {self.weights}")
         self.net = create_model(self.weights, pretrained=True)
         self.modified()
-
 
     def func_28(self, x: torch.Tensor) -> torch.Tensor:
         x = self.patch_embed_2x2(x, patch_size=2)
@@ -64,6 +64,7 @@ class ClassificationEvaluator(pl.LightningModule):
             new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
                                                      requires_grad=True)
         return new_patch_embed
+
     def count_total_parameters(self):
         # Total parameters in millions
         total_params = count_parameters(self) / 1_000_000
@@ -74,8 +75,10 @@ class ClassificationEvaluator(pl.LightningModule):
 
         return total_params, net_params, other_params
 
+
 if __name__ == "__main__":
     weights = 'vit_base_patch16_224.augreg2_in21k_ft_in1k'
+    weights = 'deit3_base_patch16_224.fb_in22k_ft_in1k'
     model = ClassificationEvaluator(weights=weights)
 
     total_params, net_params, other_params = model.count_total_parameters()
