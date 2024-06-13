@@ -250,4 +250,3 @@ if __name__ == "__main__":
         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
                                 shuffle=False, pin_memory=True)
         trainer.test(model, dataloaders=val_loader)
-
