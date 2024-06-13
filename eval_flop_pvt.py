@@ -73,59 +73,6 @@ class ClassificationEvaluator(pl.LightningModule):
 if __name__ == "__main__":
     weights = 'vit_base_patch16_224.augreg2_in21k_ft_in1k'
     model = ClassificationEvaluator(weights=weights)
-    # # Calculate total parameters of the model
-    # total_params = sum(p.numel() for p in model.net.parameters())
-    # print(f"Total parameters in net: {total_params}")
-    #
-    # # Calculate parameters for the patch embedding layer for image size 28
-    # patch_embed_params_28 = sum(p.numel() for p in model.patch_embed_2x2.parameters())
-    # print(f"Total parameters in patch embedding layer (image size 28): {patch_embed_params_28}")
-    #
-    # # Similarly, calculate for image size 224
-    # patch_embed_params_224 = sum(p.numel() for p in model.patch_embed_16x16.parameters())
-    # print(f"Total parameters in patch embedding layer (image size 224): {patch_embed_params_224}")
-    #
-    # from ptflops import get_model_complexity_info
-    #
-    #
-    # def print_flops(model, input_size):
-    #     flops, params = get_model_complexity_info(model, input_size, as_strings=True, print_per_layer_stat=False)
-    #     print(f'FLOPs for input size {input_size}: {flops}')
-    #
-    #
-    # # For input size 28
-    # print_flops(model.patch_embed_2x2, (3, 28, 28))
-    #
-    # # For input size 224
-    # print_flops(model.patch_embed_16x16, (3, 224, 224))
-    #
-    # from ptflops import get_model_complexity_info
-    #
-    #
-    # def print_flops(model, input_size):
-    #     flops, params = get_model_complexity_info(model, input_size, as_strings=False, print_per_layer_stat=True)
-    #     flops_kflops = flops   # Convert to KFLOPs
-    #     print(f'FLOPs for input size {input_size}: {flops_kflops:.2f} KFLOPs')
-    #
-    #
-    # # Adjust these functions to wrap your actual model operations
-    # def wrapped_func_28(model, x):
-    #     # Assuming `func_28` is properly integrated in your model
-    #     return model.patch_embed_2x2(x)
-    #
-    #
-    # def wrapped_func_224(model, x):
-    #     # Assuming `func_224` is properly integrated in your model
-    #     return model.patch_embed_16x16(x)
-    #
-    #
-    # # Example dummy tensor input for model
-    # dummy_input_28 = torch.randn(1, 3, 28, 28).to(model.device)
-    # dummy_input_224 = torch.randn(1, 3, 224, 224).to(model.device)
-    #
-    # # Calculate FLOPs
-    # print_flops(model.patch_embed_2x2, (3, 28, 28))
-    # print_flops(model.patch_embed_16x16, (3, 224, 224))
 
     from torchprofile import profile_macs
 
