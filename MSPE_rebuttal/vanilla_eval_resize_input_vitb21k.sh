@@ -18,7 +18,7 @@ python vanilla_eval_resize_weight_vitb21k_rebuttal.py \
   --accelerator gpu \
   --devices 1 \
   --works 4 \
-  --batch_size 256 \
+  --batch_size 2048 \
   --root /ppio_net0/torch_ds/imagenet \
   --model.weights vit_base_patch16_224.augreg2_in21k_ft_in1k \
   --model.num_classes 1000 \
