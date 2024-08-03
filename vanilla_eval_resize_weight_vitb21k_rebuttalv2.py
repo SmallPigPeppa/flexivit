@@ -146,13 +146,13 @@ if __name__ == "__main__":
     # for image_size, patch_size in [(56, 4),(112, 8)]:
     # for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10), (154, 11), (168, 12),
     #  (182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
-    for image_size, patch_size in [(224, 16), (896, 64), (1792, 128), (2240, 160),
-                                   (2800, 200), (3360, 240), (4032, 228)]:
+    for image_size, patch_size in [(560, 40), (896, 64), (1120, 80), (1792, 128), (2240, 160),
+                                   (2800, 200), (3360, 240), (4032, 288)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
-        data_config['input_size'] = (3, image_size, image_size)
+        data_config['input_size'] = (3, 1120, 1120)
         transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=transform)
         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
