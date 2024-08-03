@@ -1,4 +1,4 @@
-python L2P_4conv_eval_fix_14token_pvt_piresize.py \
+python L2P_4conv_eval_fix_14token_pvt_piresize_rebuttal.py \
   --max_epochs 1 \
   --accelerator gpu \
   --devices 1 \
