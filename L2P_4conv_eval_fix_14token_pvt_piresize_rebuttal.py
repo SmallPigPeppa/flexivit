@@ -169,7 +169,7 @@ class ClassificationEvaluator(pl.LightningModule):
         #         self.forward_after_patch_embed(x_7x7), \
         #         torch.zeros(x.size(0), self.num_classes, device=x.device)
         ped = self.patch_embed(x, patch_size=self.patch_size, stride=self.stride)
-        return self.forward_after_patch_embed(ped), self.forward_after_patch_embed(ped)
+        return self.forward_after_patch_embed(ped)
 
     def modified(self):
         self.in_chans = 3
