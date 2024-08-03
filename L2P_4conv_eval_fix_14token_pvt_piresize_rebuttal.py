@@ -225,6 +225,7 @@ if __name__ == "__main__":
                                            (4032, 126, 72)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
+        args["model"].stride = stride
         args["model"].results_path = results_path
         model = ClassificationEvaluator(**args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
