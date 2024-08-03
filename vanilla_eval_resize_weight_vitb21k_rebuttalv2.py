@@ -152,7 +152,7 @@ if __name__ == "__main__":
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
-        # data_config['input_size'] = [3, 560, 560]
+        data_config['input_size'] = (3, 560, 560)
         transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=transform)
         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
