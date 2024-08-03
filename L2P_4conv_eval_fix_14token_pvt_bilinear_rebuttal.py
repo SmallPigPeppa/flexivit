@@ -185,10 +185,9 @@ if __name__ == "__main__":
         print(f'exist {results_path}, removing ...')
         os.remove(results_path)
 
-    # for image_size, patch_size, stride in [(224, 7, 4), (448, 14, 8), (672, 21, 12), (896, 28, 16), (1120, 35, 20),
-    #                                        (1792, 56, 32), (2240, 70, 40), (2688, 84, 48), (3360, 105, 60),
-    #                                        (4032, 126, 72)]:
-    for image_size, patch_size, stride in [(4032, 126, 72)]:
+    for image_size, patch_size, stride in [(224, 7, 4), (448, 14, 8), (672, 21, 12), (896, 28, 16), (1120, 35, 20),
+                                           (1792, 56, 32), (2240, 70, 40), (2688, 84, 48), (3360, 105, 60),
+                                           (4032, 126, 72)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         args["model"].stride = stride
