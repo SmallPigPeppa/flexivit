@@ -202,8 +202,7 @@ if __name__ == "__main__":
     args["logger"] = False  # Disable saving logging artifacts
 
     trainer = pl.Trainer.from_argparse_args(args)
-    for image_size, patch_size in [(224, 16), (448, 32), (672, 48), (896, 64), (1120, 80), (1792, 128),
-                                   (2240, 160),(2688, 192), (3360, 240), (4032, 288)]:
+    for image_size, patch_size in [(224, 16)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
