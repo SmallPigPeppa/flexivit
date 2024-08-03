@@ -12,6 +12,9 @@ from flexivit_pytorch import (interpolate_resize_patch_embed, pi_resize_patch_em
 from flexivit_pytorch.utils import resize_abs_pos_embed_deit3b as resize_abs_pos_embed
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
+import torch
+from timm.models._manipulate import checkpoint_seq
+from timm.layers import resample_abs_pos_embed
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -86,8 +89,68 @@ class ClassificationEvaluator(pl.LightningModule):
         # Define loss
         self.loss_fn = CrossEntropyLoss()
 
-    def forward(self, x):
-        return self.net(x)
+    # def forward(self, x):
+    #     return self.net(x)
+    #
+    def _pos_embed(self, x: torch.Tensor) -> torch.Tensor:
+        if self.net.dynamic_img_size:
+            B, H, W, C = x.shape
+            pos_embed = resample_abs_pos_embed(
+                self.net.pos_embed,
+                (H, W),
+                num_prefix_tokens=0 if self.net.no_embed_class else self.net.num_prefix_tokens,
+            )
+            x = x.view(B, -1, C)
+        else:
+            pos_embed = self.net.pos_embed
+
+        to_cat = []
+        if self.net.cls_token is not None:
+            to_cat.append(self.net.cls_token.expand(x.shape[0], -1, -1))
+        if self.net.reg_token is not None:
+            to_cat.append(self.net.reg_token.expand(x.shape[0], -1, -1))
+
+        if self.net.no_embed_class:
+            # deit-3, updated JAX (big vision)
+            # position embedding does not overlap with class token, add then concat
+            x = x + pos_embed
+            if to_cat:
+                x = torch.cat(to_cat + [x], dim=1)
+        else:
+            # original timm, JAX, and deit vit impl
+            # pos_embed has entry for class token, concat then add
+            if to_cat:
+                x = torch.cat(to_cat + [x], dim=1)
+            x = x + pos_embed
+
+        return self.net.pos_drop(x)
+    def forward_features(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.net.patch_embed(x)
+        x = self._pos_embed(x)
+        x = self.net.patch_drop(x)
+        x = self.net.norm_pre(x)
+        if self.net.grad_checkpointing and not torch.jit.is_scripting():
+            x = checkpoint_seq(self.blocks, x)
+        else:
+            x = self.net.blocks(x)
+        x = self.net.norm(x)
+        return x
+
+    def forward_head(self, x: torch.Tensor, pre_logits: bool = False) -> torch.Tensor:
+        if self.net.attn_pool is not None:
+            x = self.net.attn_pool(x)
+        elif self.net.global_pool == 'avg':
+            x = x[:, self.net.num_prefix_tokens:].mean(dim=1)
+        elif self.net.global_pool:
+            x = x[:, 0]  # class token
+        x = self.net.fc_norm(x)
+        x = self.net.head_drop(x)
+        return x if pre_logits else self.net.head(x)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.forward_features(x)
+        x = self.forward_head(x)
+        return x
 
     def test_step(self, batch, _):
         x, y = batch
@@ -138,21 +201,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    # wandb_logger = WandbLogger(name='test', project='flexivit', entity='pigpeppa', offline=False)
-    # trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger)
     trainer = pl.Trainer.from_argparse_args(args)
-    # for image_size, patch_size in [(32, 4), (48, 4), (64, 4), (80, 8), (96, 8), (112, 8), (128, 8), (144, 16),
-    #                                (160, 16), (176, 16), (192, 16), (208, 16), (224, 16)]:
-    # for image_size, patch_size in [(56, 4),(112, 8)]:
-    # for image_size, patch_size in [(28, 2), (42, 3), (56, 4), (70, 5), (84, 6), (98, 7), (112, 8), (126, 9), (140, 10), (154, 11), (168, 12),
-    #  (182, 13), (196, 14), (210, 15), (224, 16), (238, 17), (252, 18)]:
-    for image_size, patch_size in [(560, 40), (896, 64), (1120, 80), (1792, 128), (2240, 160),
-                                   (2800, 200), (3360, 240), (4032, 288)]:
+    for image_size, patch_size in [(224, 16), (448, 32), (672, 48), (896, 64), (1120, 80), (1792, 128),
+                                   (2240, 160),(2688, 192), (3360, 240), (4032, 288)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
         model = ClassificationEvaluator(**args["model"])
         data_config = timm.data.resolve_model_data_config(model.net)
-        data_config['input_size'] = (3, 560, 560)
         transform = timm.data.create_transform(**data_config, is_training=False)
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=transform)
         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
