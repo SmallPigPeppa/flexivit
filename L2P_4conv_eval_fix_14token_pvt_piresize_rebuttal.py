@@ -72,13 +72,13 @@ class ClassificationEvaluator(pl.LightningModule):
 
         # Pass through network
         pred = self.ms_forward(x)
-        pred0, pred1, pred2, pred3 = pred, pred, pred, pred
+        # pred0, pred1, pred2, pred3 = pred, pred, pred, pred
 
         # Get accuracy
-        acc_0 = self.acc_0(pred0, y)
-        acc_1 = self.acc_1(pred1, y)
-        acc_2 = self.acc_2(pred2, y)
-        acc_3 = self.acc_3(pred3, y)
+        acc_0 = self.acc_0(pred, y)
+        acc_1 = self.acc_1(pred, y)
+        acc_2 = self.acc_2(pred, y)
+        acc_3 = self.acc_3(pred, y)
 
         # Log
         out_dict = {
