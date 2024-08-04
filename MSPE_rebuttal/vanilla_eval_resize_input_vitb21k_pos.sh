@@ -1,7 +1,6 @@
 python vanilla_eval_resize_weight_vitb21k_rebuttal_pos.py \
-  --max_epochs 1 \
+  --max_epochs 5 \
   --accelerator gpu \
-  --devices 1 \
   --works 4 \
   --precision 16 \
   --batch_size 64 \
