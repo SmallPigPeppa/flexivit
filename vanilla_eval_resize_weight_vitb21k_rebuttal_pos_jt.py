@@ -237,7 +237,7 @@ class ClassificationEvaluator(pl.LightningModule):
         optimizer = torch.optim.AdamW(
             params_to_optimize,
             lr=self.lr,
-            weight_decay=self.hparams.weight_decay
+            weight_decay=self.wd
         )
 
         scheduler = LinearWarmupCosineAnnealingLR(
