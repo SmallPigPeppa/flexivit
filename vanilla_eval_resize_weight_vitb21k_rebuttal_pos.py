@@ -17,6 +17,8 @@ from timm.models._manipulate import checkpoint_seq
 from timm.layers import resample_abs_pos_embed
 from torch import nn
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import WandbLogger
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -167,7 +169,6 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.forward_head(x)
         return x
 
-
     def share_step(self, batch, _):
         x, y = batch
         x = F.interpolate(x, size=self.image_size, mode='bilinear')
@@ -190,6 +191,7 @@ class ClassificationEvaluator(pl.LightningModule):
         loss, acc = self.share_step(batch, batch_idx)
         self.log_dict({'train/loss': loss, 'train/acc': acc}, sync_dist=True, on_epoch=True)
         return loss
+
     def test_step(self, batch, batch_idx):
         loss, acc = self.share_step(batch, batch_idx)
         self.log_dict({'test/loss': loss, 'test/acc': acc}, sync_dist=True, on_epoch=True)
@@ -217,7 +219,6 @@ class ClassificationEvaluator(pl.LightningModule):
                 # 保存更新后的结果
                 results_df.to_csv(self.results_path)
 
-
     def configure_optimizers(self):
         self.lr = 0.001
         self.wd = 5e-4
@@ -242,7 +243,6 @@ class ClassificationEvaluator(pl.LightningModule):
         return [optimizer], [scheduler]
 
 
-
 if __name__ == "__main__":
     parser = LightningArgumentParser()
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
@@ -253,7 +253,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    trainer = pl.Trainer.from_argparse_args(args)
+    wandb_logger = WandbLogger(name='learn2D', project='MSPE-rebuttal',
+                               entity='pigpeppa', offline=False)
+    checkpoint_callback = ModelCheckpoint(dirpath='ckpt/MSPE-rebuttal/learn2D', save_last=True)
+
+    trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
     for image_size, patch_size in [(224, 16)]:
         args["model"].image_size = image_size
         args["model"].patch_size = patch_size
