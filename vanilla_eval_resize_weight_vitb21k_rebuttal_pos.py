@@ -125,6 +125,7 @@ class ClassificationEvaluator(pl.LightningModule):
         if self.net.reg_token is not None:
             to_cat.append(self.net.reg_token.expand(batch_size, -1, -1))
 
+        self.net.no_embed_class=True
         if self.net.no_embed_class:
             x = x + pos_embed.view(batch_size, num_patches, -1)  # Add pos_embed first
             if to_cat:
