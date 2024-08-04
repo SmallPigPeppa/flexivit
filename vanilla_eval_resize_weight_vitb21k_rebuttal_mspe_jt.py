@@ -271,7 +271,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
-            warmup_epochs=self.max_epochs,
+            warmup_epochs=2,
             max_epochs=self.max_epochs,
             warmup_start_lr=0.01 * self.lr,
             eta_min=0.01 * self.lr,
