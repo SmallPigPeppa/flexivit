@@ -106,7 +106,8 @@ class ClassificationEvaluator(pl.LightningModule):
             # Generate patch positions based on the assumed grid layout
             assert num_patches == self.pos_height * self.pos_width, "Number of patches does not match the specified grid dimensions"
             patch_positions = torch.cartesian_prod(torch.arange(self.pos_height), torch.arange(self.pos_width))
-            patch_positions = patch_positions.repeat(batch_size, 1, 1).view(batch_size, self.pos_height, self.pos_width, 2).to(
+            patch_positions = patch_positions.repeat(batch_size, 1, 1).view(batch_size, self.pos_height, self.pos_width,
+                                                                            2).to(
                 self.device)
 
         # Unbind patch positions into height and width indices
@@ -125,8 +126,9 @@ class ClassificationEvaluator(pl.LightningModule):
         if self.net.reg_token is not None:
             to_cat.append(self.net.reg_token.expand(batch_size, -1, -1))
 
-        self.net.no_embed_class=True
-        if self.net.no_embed_class:
+        no_embed_class = True
+        # if self.net.no_embed_class:
+        if no_embed_class:
             x = x + pos_embed.view(batch_size, num_patches, -1)  # Add pos_embed first
             if to_cat:
                 x = torch.cat(to_cat + [x], dim=1)
@@ -140,8 +142,9 @@ class ClassificationEvaluator(pl.LightningModule):
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
         import pdb;
-        pdb.set_trace()
-        x = self.net._pos_embed(x)
+        # pdb.set_trace()
+        # x = self.net._pos_embed(x)
+        x = self._pos_embed_learn2D(x)
         x = self.net.patch_drop(x)
         x = self.net.norm_pre(x)
         if self.net.grad_checkpointing and not torch.jit.is_scripting():
