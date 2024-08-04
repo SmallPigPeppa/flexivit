@@ -189,7 +189,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         loss, acc = self.share_step(batch, batch_idx)
-        self.log_dict({'train/loss': loss, 'train/acc': acc}, sync_dist=True, on_epoch=True)
+        self.log_dict({'val/loss': loss, 'val/acc': acc}, sync_dist=True, on_epoch=True)
         return loss
 
     def test_step(self, batch, batch_idx):
