@@ -220,7 +220,7 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
     def configure_optimizers(self):
-        self.lr = 0.001
+        self.lr = 1e-4
         self.wd = 5e-4
         self.max_epochs = self.trainer.max_epochs
 
