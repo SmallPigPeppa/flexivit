@@ -1,7 +1,7 @@
 python vanilla_eval_resize_weight_vitb21k_rebuttal_pos.py \
   --max_epochs 5 \
   --accelerator gpu \
-  --works 4 \
+  --works 8 \
   --precision 16 \
   --batch_size 64 \
   --root /ppio_net0/torch_ds/imagenet \
