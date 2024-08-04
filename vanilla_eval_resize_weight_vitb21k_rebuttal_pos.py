@@ -15,6 +15,39 @@ from torch.utils.data import DataLoader
 import torch
 from timm.models._manipulate import checkpoint_seq
 from timm.layers import resample_abs_pos_embed
+from torch import nn
+
+
+class Factorized2DPositionalEncoding(pl.LightningModule):
+    def __init__(self, height, width, dim):
+        super(Factorized2DPositionalEncoding, self).__init__()
+        self.pos_embed_height = nn.Parameter(torch.randn(height, dim))
+        self.pos_embed_width = nn.Parameter(torch.randn(width, dim))
+        self.height = height
+        self.width = width
+
+    def forward(self, x, patch_positions=None):
+        batch_size, num_patches, _ = x.shape
+
+        if patch_positions is None:
+            # Generate patch positions based on the assumed grid layout
+            assert num_patches == self.height * self.width, "Number of patches does not match the specified grid dimensions"
+            patch_positions = torch.cartesian_prod(torch.arange(self.height), torch.arange(self.width))
+            patch_positions = patch_positions.repeat(batch_size, 1, 1).view(batch_size, self.height, self.width, 2).to(
+                self.device)
+
+        # Unbind patch positions into height and width indices
+        h_indices, w_indices = patch_positions.unbind(dim=-1)
+
+        # Retrieve positional embeddings
+        h_pos = self.pos_embed_height[h_indices]
+        w_pos = self.pos_embed_width[w_indices]
+
+        # Combine embeddings and positional encodings
+        pos_encoding = h_pos + w_pos
+        x = x + pos_encoding
+
+        return x
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -89,41 +122,21 @@ class ClassificationEvaluator(pl.LightningModule):
         # Define loss
         self.loss_fn = CrossEntropyLoss()
 
+        # pos
+        self.pos = Factorized2DPositionalEncoding(width=patch_size, height=patch_size, dim=self.net.embed_dim)
+
     # def forward(self, x):
     #     return self.net(x)
     #
-    def _pos_embed(self, x: torch.Tensor) -> torch.Tensor:
-        if self.net.dynamic_img_size:
-            B, H, W, C = x.shape
-            pos_embed = resample_abs_pos_embed(
-                self.net.pos_embed,
-                (H, W),
-                num_prefix_tokens=0 if self.net.no_embed_class else self.net.num_prefix_tokens,
-            )
-            x = x.view(B, -1, C)
-        else:
-            pos_embed = self.net.pos_embed
 
-        to_cat = []
-        if self.net.cls_token is not None:
-            to_cat.append(self.net.cls_token.expand(x.shape[0], -1, -1))
-        if self.net.reg_token is not None:
-            to_cat.append(self.net.reg_token.expand(x.shape[0], -1, -1))
 
-        if self.net.no_embed_class:
-            # deit-3, updated JAX (big vision)
-            # position embedding does not overlap with class token, add then concat
-            x = x + pos_embed
-            if to_cat:
-                x = torch.cat(to_cat + [x], dim=1)
-        else:
-            # original timm, JAX, and deit vit impl
-            # pos_embed has entry for class token, concat then add
-            if to_cat:
-                x = torch.cat(to_cat + [x], dim=1)
-            x = x + pos_embed
+    def _pos_embed_learn2D(self, x: torch.Tensor) -> torch.Tensor:
+        # factorized 2d absolute positional embedding
+
+        pass
 
         return self.net.pos_drop(x)
+
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
         x = self._pos_embed(x)
