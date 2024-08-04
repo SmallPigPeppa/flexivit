@@ -226,11 +226,18 @@ class ClassificationEvaluator(pl.LightningModule):
 
         params_to_optimize = [self.pos_embed_width, self.pos_embed_height, list(self.net.parameters())]
 
-        optimizer = torch.optim.SGD(
+        # optimizer = torch.optim.SGD(
+        #     params_to_optimize,
+        #     lr=self.lr,
+        #     weight_decay=self.wd,
+        #     momentum=0.9
+        # )
+
+        optimizer = torch.optim.AdamW(
             params_to_optimize,
             lr=self.lr,
-            weight_decay=self.wd,
-            momentum=0.9)
+            weight_decay=self.hparams.weight_decay
+        )
 
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
@@ -252,7 +259,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args["logger"] = False  # Disable saving logging artifacts
 
-    wandb_logger = WandbLogger(name='learn2D', project='MSPE-rebuttal',
+    wandb_logger = WandbLogger(name='learn2D-jt', project='MSPE-rebuttal',
                                entity='pigpeppa', offline=False)
     checkpoint_callback = ModelCheckpoint(dirpath='ckpt/MSPE-rebuttal/learn2D', save_last=True)
 
