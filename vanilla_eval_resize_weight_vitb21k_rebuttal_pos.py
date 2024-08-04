@@ -139,7 +139,7 @@ class ClassificationEvaluator(pl.LightningModule):
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.net.patch_embed(x)
-        x = self._pos_embed(x)
+        x = self.net._pos_embed(x)
         x = self.net.patch_drop(x)
         x = self.net.norm_pre(x)
         if self.net.grad_checkpointing and not torch.jit.is_scripting():
