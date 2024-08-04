@@ -90,10 +90,10 @@ class ClassificationEvaluator(pl.LightningModule):
         # Define loss
         self.loss_fn = CrossEntropyLoss()
 
-        self.pos_embed_height = nn.Parameter(torch.randn(patch_size, self.net.embed_dim))
-        self.pos_embed_width = nn.Parameter(torch.randn(patch_size, self.net.embed_dim))
-        self.pos_height = patch_size
-        self.pos_width = patch_size
+        self.pos_embed_height = nn.Parameter(torch.randn(self.image_size // self.patch_size, self.net.embed_dim))
+        self.pos_embed_width = nn.Parameter(torch.randn(self.image_size // self.patch_size, self.net.embed_dim))
+        self.pos_height = self.image_size // self.patch_size
+        self.pos_width = self.image_size // self.patch_size
 
     # def forward(self, x):
     #     return self.net(x)
