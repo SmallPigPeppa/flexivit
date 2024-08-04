@@ -16,6 +16,7 @@ import torch
 from timm.models._manipulate import checkpoint_seq
 from timm.layers import resample_abs_pos_embed
 from torch import nn
+from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
 
 
 class ClassificationEvaluator(pl.LightningModule):
@@ -95,10 +96,6 @@ class ClassificationEvaluator(pl.LightningModule):
         self.pos_height = self.image_size // self.patch_size
         self.pos_width = self.image_size // self.patch_size
 
-    # def forward(self, x):
-    #     return self.net(x)
-    #
-
     def _pos_embed_learn2D(self, x, patch_positions=None):
         batch_size, num_patches, _ = x.shape
 
@@ -170,7 +167,8 @@ class ClassificationEvaluator(pl.LightningModule):
         x = self.forward_head(x)
         return x
 
-    def test_step(self, batch, _):
+
+    def share_step(self, batch, _):
         x, y = batch
         x = F.interpolate(x, size=self.image_size, mode='bilinear')
 
@@ -181,9 +179,20 @@ class ClassificationEvaluator(pl.LightningModule):
         # Get accuracy
         acc = self.acc(pred, y)
 
-        # Log
-        self.log_dict({'test_loss': loss, 'test_acc': acc}, sync_dist=True, on_epoch=True)
+        return loss, acc
 
+    def training_step(self, batch, batch_idx):
+        loss, acc = self.share_step(batch, batch_idx)
+        self.log_dict({'train/loss': loss, 'train/acc': acc}, sync_dist=True, on_epoch=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        loss, acc = self.share_step(batch, batch_idx)
+        self.log_dict({'train/loss': loss, 'train/acc': acc}, sync_dist=True, on_epoch=True)
+        return loss
+    def test_step(self, batch, batch_idx):
+        loss, acc = self.share_step(batch, batch_idx)
+        self.log_dict({'test/loss': loss, 'test/acc': acc}, sync_dist=True, on_epoch=True)
         return loss
 
     def test_epoch_end(self, outputs):
@@ -209,6 +218,31 @@ class ClassificationEvaluator(pl.LightningModule):
                 results_df.to_csv(self.results_path)
 
 
+    def configure_optimizers(self):
+        self.lr = 0.001
+        self.wd = 5e-4
+        self.max_epochs = self.trainer.max_epochs
+
+        params_to_optimize = list(self.pos_embed_width) + \
+                             list(self.pos_embed_height)
+
+        optimizer = torch.optim.SGD(
+            params_to_optimize,
+            lr=self.lr,
+            weight_decay=self.wd,
+            momentum=0.9)
+
+        scheduler = LinearWarmupCosineAnnealingLR(
+            optimizer,
+            warmup_epochs=self.max_epochs,
+            max_epochs=self.max_epochs,
+            warmup_start_lr=0.01 * self.lr,
+            eta_min=0.01 * self.lr,
+        )
+        return [optimizer], [scheduler]
+
+
+
 if __name__ == "__main__":
     parser = LightningArgumentParser()
     parser.add_lightning_class_args(pl.Trainer, None)  # type:ignore
@@ -229,4 +263,9 @@ if __name__ == "__main__":
         val_dataset = ImageFolder(root=os.path.join(args.root, 'val'), transform=transform)
         val_loader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.works,
                                 shuffle=False, pin_memory=True)
-        trainer.test(model, dataloaders=val_loader)
+        train_transform = timm.data.create_transform(**data_config, is_training=True)
+        train_dataset = ImageFolder(root=os.path.join(args.root, 'train'), transform=train_transform)
+        train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
+                                  shuffle=True, pin_memory=True)
+        # trainer.test(model, dataloaders=val_loader)
+        trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
