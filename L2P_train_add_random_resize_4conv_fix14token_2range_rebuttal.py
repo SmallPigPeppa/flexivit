@@ -180,18 +180,11 @@ class ClassificationEvaluator(pl.LightningModule):
                              list(self.patch_embed_16x16.parameters()) + \
                              list(self.net.parameters())
 
-
         optimizer = torch.optim.SGD(
             params_to_optimize,
             lr=self.lr,
             weight_decay=self.wd,
             momentum=0.9)
-
-        # optimizer = torch.optim.SGD(
-        #     self.parameters(),
-        #     lr=self.lr,
-        #     weight_decay=self.wd,
-        #     momentum=0.9)
 
         scheduler = LinearWarmupCosineAnnealingLR(
             optimizer,
@@ -296,7 +289,6 @@ class ClassificationEvaluator(pl.LightningModule):
         self.patch_embed_12x12 = self.get_new_patch_embed(new_image_size=168, new_patch_size=12)
         self.patch_embed_16x16 = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
         self.patch_embed_16x16_origin = self.get_new_patch_embed(new_image_size=224, new_patch_size=16)
-        # import pdb;pdb.set_trace()
 
         self.net.patch_embed = nn.Identity()
 
@@ -312,19 +304,16 @@ class ClassificationEvaluator(pl.LightningModule):
         )
         if hasattr(self.net.patch_embed.proj, 'weight'):
             origin_weight = self.net.patch_embed.proj.weight.clone().detach()
-            # new_weight = pi_resize_patch_embed(
-            #     patch_embed=self.origin_state_dict["patch_embed.proj.weight"],
-            #     new_patch_size=(new_patch_size, new_patch_size)
-            # )
             new_weight = pi_resize_patch_embed(
-                patch_embed=origin_weight, new_patch_size=(new_patch_size, new_patch_size)
+                patch_embed=origin_weight,
+                new_patch_size=(new_patch_size, new_patch_size)
             )
             new_patch_embed.proj.weight = nn.Parameter(new_weight, requires_grad=True)
         if self.net.patch_embed.proj.bias is not None:
-            # new_patch_embed.proj.bias = nn.Parameter(torch.tensor(self.origin_state_dict["patch_embed.proj.bias"]),
-            #                                          requires_grad=True)
-            new_patch_embed.proj.bias = nn.Parameter(self.net.patch_embed.proj.bias.clone().detach(),
-                                                     requires_grad=True)
+            new_patch_embed.proj.bias = nn.Parameter(
+                self.net.patch_embed.proj.bias.clone().detach(),
+                requires_grad=True
+            )
 
         return new_patch_embed
 
@@ -346,8 +335,6 @@ if __name__ == "__main__":
                                           save_top_k=1,
                                           save_last=True)
     trainer = pl.Trainer.from_argparse_args(args, logger=wandb_logger, callbacks=[checkpoint_callback])
-    # lr_monitor = LearningRateMonitor(logging_interval="epoch")
-    # trainer = pl.Trainer.from_argparse_args(args)
 
     for image_size, patch_size in [(224, 16)]:
         args["model"].image_size = image_size
@@ -363,4 +350,3 @@ if __name__ == "__main__":
         train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.works,
                                   shuffle=True, pin_memory=True)
         trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-        # trainer.test(model, dataloaders=val_loader)
